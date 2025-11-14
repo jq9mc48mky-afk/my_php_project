@@ -51,6 +51,11 @@ function fetchComputersData($pdo, $params, $results_per_page = 10) {
         $where_clauses[] = 'c.category_id = ?';
         $query_params[] = $category_filter;
     }
+
+    if (!empty($params['assigned_user_id'])) {
+        $where_clauses[] = 'c.assigned_to_user_id = ?';
+        $query_params[] = $params['assigned_user_id'];
+    }
     
     $sql_where = '';
     if (!empty($where_clauses)) {

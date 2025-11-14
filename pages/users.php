@@ -211,7 +211,10 @@ if (isset($_POST['reactivate_id'])) {
 
 // *** MODIFIED: LIST DISPLAY LOGIC (Handles filtering) ***
 $show_inactive = isset($_GET['show_inactive']);
-$sql = "SELECT id, username, full_name, role, is_active FROM users";
+$sql = "SELECT 
+            u.id, u.username, u.full_name, u.role, u.is_active,
+            (SELECT COUNT(*) FROM computers c WHERE c.assigned_to_user_id = u.id) as asset_count
+        FROM users u";
 if (!$show_inactive) {
     $sql .= " WHERE is_active = 1";
 }
@@ -246,7 +249,8 @@ $roles = ['Super Admin', 'Admin', 'User'];
                         <th>Full Name</th>
                         <th>Username</th>
                         <th>Role</th>
-                        <th>Status</th> <!-- *** NEW COLUMN *** -->
+                        <th>Status</th>
+                        <th>Assets</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -271,6 +275,17 @@ $roles = ['Super Admin', 'Admin', 'User'];
                                 <span class="badge bg-success">Active</span>
                             <?php else: ?>
                                 <span class="badge bg-secondary">Inactive</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($user['asset_count'] > 0): ?>
+                                <a href="index.php?page=computers&assigned_user_id=<?php echo $user['id']; ?>" 
+                                   class="badge bg-primary text-decoration-none" 
+                                   title="View <?php echo $user['asset_count']; ?> assigned assets">
+                                    <?php echo $user['asset_count']; ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="badge bg-light text-dark">0</span>
                             <?php endif; ?>
                         </td>
                         <td>

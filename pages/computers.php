@@ -387,6 +387,10 @@ switch ($action) {
         $categories = $pdo->query('SELECT id, name FROM categories')->fetchAll();
         $suppliers = $pdo->query('SELECT id, name FROM suppliers')->fetchAll();
         $users = $pdo->query('SELECT id, username, full_name FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
+        // Data for new "Assigned To" filter
+        $users_list = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
+        $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
+        
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
         
         ?>
@@ -701,7 +705,7 @@ switch ($action) {
                 <form method="GET" action="index.php" id="ajax-filter-form" data-type="computers">
                     <input type="hidden" name="page" value="computers">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="search" class="form-label">Search</label>
                             <input type="text" class="form-control" id="search" name="search" 
                                    placeholder="Asset Tag, Model, Serial..." 
@@ -718,13 +722,24 @@ switch ($action) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="status_filter" class="form-label">Status</label>
                             <select class="form-select" id="status_filter" name="status_filter">
                                 <option value="">-- All Statuses --</option>
                                 <?php foreach ($statuses as $status): ?>
                                     <option value="<?php echo $status; ?>" <?php echo ($status_filter == $status) ? 'selected' : ''; ?>>
                                         <?php echo $status; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="assigned_user_id" class="form-label">Assigned To</label>
+                            <select class="form-select" id="assigned_user_id" name="assigned_user_id">
+                                <option value="">-- All Users --</option>
+                                <?php foreach ($users_list as $user): ?>
+                                    <option value="<?php echo $user['id']; ?>" <?php echo ($assigned_user_filter == $user['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($user['full_name']); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
