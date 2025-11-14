@@ -67,9 +67,7 @@
         if (el) {
             const defaultOptions = {
                 create: false,
-                sortField: { field: "text", direction: "asc" },
-                allowEmptyOption: false,
-                dropdownParent: 'body' // Fix for modal clipping
+                sortField: { field: "text", direction: "asc" }
             };
             return new TomSelect(el, { ...defaultOptions, ...userOptions });
         }
@@ -287,6 +285,7 @@
             }
         }
     });
+    document.dispatchEvent(new Event('app:loaded'));
 </script>
 </body>
 </html>

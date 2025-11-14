@@ -218,7 +218,7 @@ $current_page = $data['current_page'];
 </div>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('app:loaded', function() {
     const supplierModal = document.getElementById('supplierModal');
     if (supplierModal) {
         supplierModal.addEventListener('show.bs.modal', function(event) {
