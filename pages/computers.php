@@ -741,7 +741,7 @@ switch ($action) {
                         </div>
                         <div class="col-md-2">
                             <label for="assigned_user_id" class="form-label">Assigned To</label>
-                            <select class="form-select" id="assigned_user_id" name="assigned_user_id">
+                            <select class="form-select" id="assigned_user_filter" name="assigned_user_id">
                                 <option value="">-- All Users --</option>
                                 <?php foreach ($users as $user): ?>
                                     <option value="<?php echo $user['id']; ?>" <?php echo ($assigned_user_filter == $user['id']) ? 'selected' : ''; ?>>
@@ -837,7 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 window.initTomSelect('#category_filter', filterOptions);
                 window.initTomSelect('#status_filter', filterOptions);
-                window.initTomSelect('#assigned_to_user_id', filterOptions);
+                window.initTomSelect('#assigned_user_filter', filterOptions);
             }
 
     // --- Select All Checkbox Logic ---
