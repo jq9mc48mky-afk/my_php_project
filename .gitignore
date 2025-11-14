@@ -1,0 +1,8 @@
+# Composer dependencies
+vendor/
+
+# Environment variables
+.env
+
+# NPM dependencies
+node_modules/

@@ -6,8 +6,8 @@ require 'log_helper.php'; // For logging the successful reset
 
 // *** HTTP SECURITY HEADERS (Copied from login.php) ***
 header("Content-Security-Policy: default-src 'self'; " .
-       "script-src 'self' https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js; " .
-       "style-src 'self' https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css; " .
+       "script-src 'self'; " .
+       "style-src 'self'; " .
        "object-src 'none'; ");
 header("X-Content-Type-Options: nosniff");
 header("X-Frame-Options: DENY");
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reset Password - Inventory System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
         .reset-card { max-width: 450px; margin-top: 100px; }
@@ -141,6 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

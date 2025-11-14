@@ -10,34 +10,6 @@ require 'ajax_query_helpers.php';
 require 'ajax_render_helpers.php';
 require 'image_helper.php';
 
-function handle_image_upload($file_data) {
-    $errors = [];
-    if (!isset($file_data) || $file_data['error'] !== UPLOAD_ERR_OK) {
-        return null;
-    }
-    if ($file_data['size'] > MAX_FILE_SIZE) {
-        $errors[] = 'File is too large. Maximum size is ' . (MAX_FILE_SIZE / 1024 / 1024) . ' MB.';
-    }
-    $file_extension = strtolower(pathinfo($file_data['name'], PATHINFO_EXTENSION));
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime_type = $finfo->file($file_data['tmp_name']);
-    $allowed_mime_types = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!in_array($file_extension, ALLOWED_EXTENSIONS) || !in_array($mime_type, $allowed_mime_types)) {
-        $errors[] = 'Invalid file type. Only JPG, PNG, and GIF are allowed.';
-    }
-    if (empty($errors)) {
-        $new_filename = uniqid('asset_', true) . '.' . $file_extension;
-        $destination = UPLOAD_DIR . $new_filename;
-        if (move_uploaded_file($file_data['tmp_name'], $destination)) {
-            return $new_filename;
-        } else {
-            $errors[] = 'Failed to move uploaded file. Check server permissions.';
-            return $errors;
-        }
-    }
-    return $errors;
-}
-
 $action = $_GET['action'] ?? 'list';
 $admin_user_id = $_SESSION['user_id'];
 

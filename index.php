@@ -7,19 +7,10 @@ $csp_nonce = bin2hex(random_bytes(16));
 // *** HTTP SECURITY HEADERS ***
 $nonce_string = "'nonce-" . $csp_nonce . "'";
 header("Content-Security-Policy: default-src 'self'; " .
-       "script-src 'self' " .
-           "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz' " .
-           "https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js 'sha256-KNeF6xW5o/tW1oae5XlS4JCNADoM+RHqrnoUqL6pvHY=' " .
-           "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js 'sha256-Huqxy3eUcaCwqqk92RwusapTfWlvAasF6p2rxV6FJaE=' " .
-           $nonce_string . "; " .
-       "style-src 'self' " .
-           "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css 'sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH' " .
-           "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css 'sha384-dpuaTHEBJeSjVBZkE9FNEPcbL2GfNlYtBW/aFG1TLcIcP1rT/5o8NFv/sUbOPfO/' " .
-           "https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css 'sha256-4MwGlgBoHJALXjs2YKZb4sMqhSw7+yMymHAoa0cwJGE=' " .
-           "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css 'sha256-GzSkJVLJbxDk36qko2cnawOGiqz/Y8GsQv/jMTUrx1Q=' " .
-           $nonce_string . "; " .
-       "font-src 'self' https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/; " .
-       "connect-src 'self' https://cdn.jsdelivr.net; " .
+       "script-src 'self' " . $nonce_string . "; " .
+       "style-src 'self' " . $nonce_string . "; " .
+       "font-src 'self'; " .
+       "connect-src 'self'; " .
        "img-src 'self' data:; " .
        "object-src 'none'; " .
        "frame-ancestors 'none';");

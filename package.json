@@ -1,0 +1,21 @@
+{
+  "name": "inventory",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:css && npm run build:js && npm run build:fonts",
+    "build:css": "cp node_modules/bootstrap/dist/css/bootstrap.min.css assets/css/ && cp node_modules/bootstrap-icons/font/bootstrap-icons.min.css assets/css/ && cp node_modules/tom-select/dist/css/tom-select.bootstrap5.min.css assets/css/ && cp node_modules/flatpickr/dist/flatpickr.min.css assets/css/",
+    "build:js": "cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js assets/js/ && cp node_modules/tom-select/dist/js/tom-select.complete.min.js assets/js/ && cp node_modules/flatpickr/dist/flatpickr.min.js assets/js/",
+    "build:fonts": "cp -R node_modules/bootstrap-icons/font/fonts assets/css/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "5.3.3",
+    "bootstrap-icons": "1.11.3",
+    "flatpickr": "4.6.13",
+    "tom-select": "2.3.1"
+  }
+}

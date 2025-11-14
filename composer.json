@@ -1,0 +1,8 @@
+{
+    "name": "josep/inventory",
+    "description": "A PHP-based asset inventory management system.",
+    "type": "project",
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
