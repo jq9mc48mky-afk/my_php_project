@@ -1,6 +1,9 @@
 <?php
 // Start session and check authentication
 session_start();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    validate_csrf_token();
+}
 if (!isset($_SESSION['user_id'])) {
     header('HTTP/1.1 401 Unauthorized');
     echo json_encode(['error' => 'Access Denied. Please log in.']);
@@ -54,18 +57,34 @@ try {
             break;
 
         case 'categories':
+            if ($role == 'User') { // Or whatever role CANNOT see categories
+                header('HTTP/1.1 403 Forbidden');
+                echo json_encode(['error' => 'Access Denied.']);
+                exit;
+            }
             $data = fetchCategoriesData($pdo, $params);
             // *** MODIFIED: Pass csrf_token() string, not the function
             $tableBodyHtml = renderCategoriesTableBody($data['results'], csrf_input());
             break;
 
         case 'suppliers':
+            if ($role == 'User') {
+                header('HTTP/1.1 403 Forbidden');
+                echo json_encode(['error' => 'Access Denied.']);
+                exit;
+            }
             $data = fetchSuppliersData($pdo, $params);
             // *** MODIFIED: Pass csrf_token() string, not the function
             $tableBodyHtml = renderSuppliersTableBody($data['results'], csrf_input());
             break;
 
         case 'generate-reset-token':
+            if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+                header('HTTP/1.1 405 Method Not Allowed');
+                echo json_encode(['error' => 'POST method required.']);
+                exit;
+            }
+
             // Only Super Admins can do this
             if ($role != 'Super Admin') {
                 header('HTTP/1.1 403 Forbidden');
@@ -73,10 +92,10 @@ try {
                 exit;
             }
 
-            $user_id = (int)($_GET['user_id'] ?? 0);
+            $user_id = (int)($_POST['user_id'] ?? 0);
             if ($user_id <= 0) {
                 header('HTTP/1.1 400 Bad Request');
-                echo json_encode(['error' => 'Invalid user ID.']);
+                echo json_encode(['token' => $token]);
                 exit;
             }
             

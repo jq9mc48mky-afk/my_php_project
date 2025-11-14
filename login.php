@@ -9,9 +9,10 @@ header("Content-Security-Policy: default-src 'self'; " .
        "style-src 'self'; " .
        "connect-src 'self'; " .
        "img-src 'self' data:; " .
-       "object-src 'none'; ");
+       "object-src 'none'; " .
+       "frame-ancestors 'none'; ");
 header("X-Content-Type-Options: nosniff");
-header("X-Frame-Options: DENY");
+//header("X-Frame-Options: DENY");
 header("Referrer-Policy: strict-origin-when-cross-origin");
 header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
 

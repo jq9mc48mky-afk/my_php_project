@@ -75,8 +75,8 @@ try {
     }
 
     // --- Role-Based Access Control (RBAC) ---
-    if ($role == 'Admin' && ($page == 'users' || $page == 'system_log')) { // <-- MODIFIED
-        $_SESSION['error'] = 'Access Denied: You do not have permission to access that page.'; // <-- MODIFIED
+    if ($role == 'Admin' && ($page == 'users' || $page == 'system_log')) {
+        $_SESSION['error'] = 'Access Denied: You do not have permission to access that page.';
         $page = 'dashboard';
     }
     if ($role == 'User') {
@@ -99,6 +99,7 @@ try {
         include $page_file;
     } else {
         // 404 behavior if file not found
+        header("HTTP/1.1 404 Not Found");
         echo '<h1>404 Not Found</h1>';
         echo '<div class="alert alert-danger">The page you requested does not exist.</div>';
     }
