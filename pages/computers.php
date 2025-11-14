@@ -672,6 +672,12 @@ switch ($action) {
         // Data for filters
         $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
+
+        // --- *** THIS IS THE FIX *** ---
+        // Data for new "Assigned To" filter dropdown
+        $users = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
+        $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
+        // --- *** END FIX *** ---
         
         // Initial data load using the helper
         $data = fetchComputersData($pdo, $_GET);
@@ -699,11 +705,11 @@ switch ($action) {
             </div>
         </div>
         
-        <!-- *** MODIFIED: Added id="ajax-filter-form" and data-type="computers" *** -->
         <div class="card shadow-sm rounded-3 mb-4">
             <div class="card-body bg-light">
                 <form method="GET" action="index.php" id="ajax-filter-form" data-type="computers">
                     <input type="hidden" name="page" value="computers">
+                    
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label for="search" class="form-label">Search</label>
@@ -753,9 +759,7 @@ switch ($action) {
             </div>
         </div>
         
-        <!-- *** MODIFIED: Added id="data-table-container" for loading overlay *** -->
         <div class="card shadow-sm rounded-3" id="data-table-container">
-            <!-- *** NEW: Loading Overlay *** -->
             <div class="loading-overlay" id="loading-overlay" style="display: none;">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -783,7 +787,6 @@ switch ($action) {
                                 <?php endif; ?>
                             </tr>
                         </thead>
-                        <!-- *** MODIFIED: Added id="data-table-body" *** -->
                         <tbody id="data-table-body">
                             <?php 
                             // Render initial table body using the helper
@@ -793,7 +796,6 @@ switch ($action) {
                     </table>
                 </div>
                 
-                <!-- *** MODIFIED: Added id="pagination-controls" *** -->
                 <div id="pagination-controls">
                     <?php
                     // Render initial pagination using the helper
@@ -804,7 +806,6 @@ switch ($action) {
             </div>
             
             <?php if ($role != 'User'): ?>
-            <!-- *** MODIFIED: Always render footer, but hide if no computers *** -->
             <div class="card-footer bg-light" id="bulk-action-footer" style="<?php echo empty($computers) ? 'display: none;' : ''; ?>">
                 <form id="bulkActionForm" method="POST" action="index.php?page=computers">
                     <?php echo csrf_input(); ?>
@@ -824,9 +825,6 @@ switch ($action) {
 
         </div>
         
-<!-- *** REMOVED: Style block moved to header.php *** -->
-
-<!-- *** MODIFIED: Bulk action script. Event listeners are now delegated in footer. *** -->
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
 document.addEventListener('DOMContentLoaded', function() {
     
