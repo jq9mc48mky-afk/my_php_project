@@ -61,7 +61,10 @@
 <script src="assets/js/flatpickr.min.js"></script>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-    // Global Helpers
+    // --- STEP 1: DEFINE ALL HELPERS GLOBALLY ---
+    // We define these functions first, outside any listeners,
+    // so they are available immediately.
+
     window.initTomSelect = (selector, userOptions = {}) => {
         const el = document.querySelector(selector);
         if (el) {
@@ -74,7 +77,6 @@
         return null;
     };
 
-    // *** Flatpickr Helper ***
     window.initFlatpickr = (selector, userOptions = {}, cspNonce) => {
         const el = document.querySelector(selector);
         if (el) {
@@ -97,6 +99,29 @@
         if (el) new bootstrap.Modal(el).show();
     };
 
+    window.showToast = (message, type = 'success') => {
+        const container = document.querySelector('.toast-container');
+        if (!container) return;
+        const id = 'toast-' + Math.random().toString(36).substring(2, 9);
+        const bg = (type === 'success') ? 'bg-success' : 'bg-danger';
+        const icon = (type === 'success') ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+        const html = `
+            <div class="toast align-items-center text-white ${bg} border-0" role="alert" aria-live="assertive" aria-atomic="true" id="${id}">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi ${icon} me-2"></i> ${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+        const el = document.getElementById(id);
+        const toast = new bootstrap.Toast(el, { delay: 5000 });
+        el.addEventListener('hidden.bs.toast', () => el.remove());
+        toast.show();
+    };
+
+    // --- STEP 2: RUN ALL LOGIC AFTER DOM IS READY ---
+    // Now we have ONE single listener for all page logic.
+    
     document.addEventListener('DOMContentLoaded', function() {
         
         // --- NEW: Mini Sidebar Toggle Logic ---
@@ -129,27 +154,7 @@
             });
         }
 
-        // --- Toast Notification Logic ---
-        window.showToast = (message, type = 'success') => {
-            const container = document.querySelector('.toast-container');
-            if (!container) return;
-            const id = 'toast-' + Math.random().toString(36).substring(2, 9);
-            const bg = (type === 'success') ? 'bg-success' : 'bg-danger';
-            const icon = (type === 'success') ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-            const html = `
-                <div class="toast align-items-center text-white ${bg} border-0" role="alert" aria-live="assertive" aria-atomic="true" id="${id}">
-                    <div class="d-flex">
-                        <div class="toast-body"><i class="bi ${icon} me-2"></i> ${message}</div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                </div>`;
-            container.insertAdjacentHTML('beforeend', html);
-            const el = document.getElementById(id);
-            const toast = new bootstrap.Toast(el, { delay: 5000 });
-            el.addEventListener('hidden.bs.toast', () => el.remove());
-            toast.show();
-        };
-        
+        // --- Toast Notification Logic (Now uses the helper) ---
         <?php if (isset($_SESSION['success'])): ?>
             window.showToast(<?php echo json_encode($_SESSION['success']); ?>, 'success');
             <?php unset($_SESSION['success']); ?>
@@ -269,14 +274,12 @@
                 clearBtn.addEventListener('click', (e) => {
                     e.preventDefault();
 
-                    // --- ADD THIS LOGIC ---
                     // Manually clear any Tom Select instances before resetting the form
                     filterForm.querySelectorAll('select').forEach(select => {
                         if (select.tomselect) {
                             select.tomselect.clear();
                         }
                     });
-                    // --- END ADD LOGIC ---
 
                     filterForm.reset();
                     window.history.pushState({}, '', window.location.pathname + '?page=' + pageType);
@@ -284,7 +287,12 @@
                 });
             }
         }
+
+        // --- STEP 3: FIRE THE "APP LOADED" EVENT ---
+        // This *must* be at the end of this listener, after
+        // all other logic is set up.
         document.dispatchEvent(new Event('app:loaded'));
+
     });
 </script>
 </body>
