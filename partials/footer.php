@@ -270,6 +270,16 @@
             if (clearBtn) {
                 clearBtn.addEventListener('click', (e) => {
                     e.preventDefault();
+
+                    // --- ADD THIS LOGIC ---
+                    // Manually clear any Tom Select instances before resetting the form
+                    filterForm.querySelectorAll('select').forEach(select => {
+                        if (select.tomselect) {
+                            select.tomselect.clear();
+                        }
+                    });
+                    // --- END ADD LOGIC ---
+
                     filterForm.reset();
                     window.history.pushState({}, '', window.location.pathname + '?page=' + pageType);
                     fetchData(getUrl(1));

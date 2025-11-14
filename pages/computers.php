@@ -828,6 +828,18 @@ switch ($action) {
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
 document.addEventListener('DOMContentLoaded', function() {
     
+    if (typeof window.initTomSelect === 'function') {
+                // By setting dropdownParent: null, we override the global
+                // 'dropdownParent: body' setting from footer.php.
+                // This forces these filter dropdowns to render in their
+                // default wrapper, which fixes the layout-breaking bug.
+                const filterOptions = { dropdownParent: null };
+                
+                window.initTomSelect('#category_filter', filterOptions);
+                window.initTomSelect('#status_filter', filterOptions);
+                window.initTomSelect('#assigned_to_user_id', filterOptions);
+            }
+
     // --- Select All Checkbox Logic ---
     // This must be attached to a static parent since the checkboxes are dynamic
     const tableContainer = document.getElementById('data-table-container');
