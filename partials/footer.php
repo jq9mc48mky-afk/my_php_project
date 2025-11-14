@@ -61,9 +61,9 @@
 <script src="assets/js/flatpickr.min.js"></script>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-    // --- STEP 1: DEFINE ALL HELPERS GLOBALLY ---
-    // We define these functions first, outside any listeners,
-    // so they are available immediately.
+    // --- STEP 1: DEFINE ALL HELPER FUNCTIONS ---
+    // We define these first, in the global scope, so they
+    // are guaranteed to exist before any listeners run.
 
     window.initTomSelect = (selector, userOptions = {}) => {
         const el = document.querySelector(selector);
@@ -119,28 +119,22 @@
         toast.show();
     };
 
-    // --- STEP 2: RUN ALL LOGIC AFTER DOM IS READY ---
-    // Now we have ONE single listener for all page logic.
+    // --- STEP 2: RUN ALL PAGE LOGIC IN ONE DOMCONTENTLOADED LISTENER ---
     
     document.addEventListener('DOMContentLoaded', function() {
         
-        // --- NEW: Mini Sidebar Toggle Logic ---
+        // --- Mini Sidebar Toggle Logic ---
         const sidebarToggle = document.getElementById('sidebarToggle');
-        
-        // Check LocalStorage on load
         if (localStorage.getItem('sidebar-minimized') === 'true') {
             document.body.classList.add('sidebar-minimized');
         }
-
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', function() {
                 document.body.classList.toggle('sidebar-minimized');
-                // Save state
                 const isMinimized = document.body.classList.contains('sidebar-minimized');
                 localStorage.setItem('sidebar-minimized', isMinimized);
             });
         }
-        // --- End Mini Sidebar Logic ---
 
         // --- Sidebar Overlay Logic (Mobile) ---
         const sidebar = document.getElementById('sidebarMenu');
@@ -154,7 +148,7 @@
             });
         }
 
-        // --- Toast Notification Logic (Now uses the helper) ---
+        // --- Toast Notification Logic ---
         <?php if (isset($_SESSION['success'])): ?>
             window.showToast(<?php echo json_encode($_SESSION['success']); ?>, 'success');
             <?php unset($_SESSION['success']); ?>
@@ -164,7 +158,7 @@
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        // --- Modal Delegation Logic (Delete/Confirm) ---
+        // --- Modal Delegation Logic ---
         const deleteModalEl = document.getElementById('confirmDeleteModal');
         let deleteForm = null;
         if (deleteModalEl) {
@@ -273,14 +267,11 @@
             if (clearBtn) {
                 clearBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-
-                    // Manually clear any Tom Select instances before resetting the form
                     filterForm.querySelectorAll('select').forEach(select => {
                         if (select.tomselect) {
                             select.tomselect.clear();
                         }
                     });
-
                     filterForm.reset();
                     window.history.pushState({}, '', window.location.pathname + '?page=' + pageType);
                     fetchData(getUrl(1));
