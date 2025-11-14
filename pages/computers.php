@@ -673,11 +673,9 @@ switch ($action) {
         $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
 
-        // --- *** THIS IS THE FIX *** ---
         // Data for new "Assigned To" filter dropdown
         $users = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
         $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
-        // --- *** END FIX *** ---
         
         // Initial data load using the helper
         $data = fetchComputersData($pdo, $_GET);
@@ -832,7 +830,7 @@ document.addEventListener('app:loaded', function() {
         // These options are for the filter bar
         const filterOptions = {
             dropdownParent: 'parent', // Fixes layout bug
-            allowEmptyOption: true  // Fixes search bar
+            allowEmptyOption: false  // Fixes search bar
         };
         window.initTomSelect('#category_filter', filterOptions);
         window.initTomSelect('#status_filter', filterOptions);

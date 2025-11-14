@@ -284,8 +284,8 @@
                 });
             }
         }
+        document.dispatchEvent(new Event('app:loaded'));
     });
-    document.dispatchEvent(new Event('app:loaded'));
 </script>
 </body>
 </html>
