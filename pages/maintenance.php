@@ -211,7 +211,7 @@ $computers = $pdo->query('SELECT id, asset_tag, model FROM computers ORDER BY as
 
 <!-- *** UPDATED: Initialization Script *** -->
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-document.addEventListener('app:loaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const addTaskModal = document.getElementById('addTaskModal');
     if (addTaskModal) {
         const form = addTaskModal.querySelector('#addTaskForm');
@@ -223,8 +223,7 @@ document.addEventListener('app:loaded', function() {
             if (selectEl && !selectEl.tomselect) {
                 if (typeof window.initTomSelect === 'function') {
                     window.initTomSelect('#computer_id', {
-                        dropdownParent: 'body', // This attaches the dropdown to the body to avoid clipping
-                        allowEmptyOption: false
+                        dropdownParent: 'body' // This attaches the dropdown to the body to avoid clipping
                     });
                 }
             }

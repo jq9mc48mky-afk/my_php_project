@@ -554,12 +554,12 @@ switch ($action) {
 
         <!-- *** ADDED: Tom Select Initializer Script *** -->
         <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-        document.addEventListener('app:loaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.initTomSelect === 'function') {
-                const formOptions = { dropdownParent: 'body', allowEmptyOption: false };
-                window.initTomSelect('#category_id', formOptions);
-                window.initTomSelect('#supplier_id', formOptions);
-                window.initTomSelect('#assigned_to_user_id', formOptions);
+                // These selects are on the main page, not in a modal
+                window.initTomSelect('#category_id');
+                window.initTomSelect('#supplier_id');
+                window.initTomSelect('#assigned_to_user_id');
 
                 // *** NEW: Initialize Flatpickr ***
                 const cspNonce = '<?php echo $csp_nonce; ?>';
@@ -651,9 +651,9 @@ switch ($action) {
         </div>
         <!-- *** ADDED: Tom Select Initializer Script for Checkout page *** -->
         <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-        document.addEventListener('app:loaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.initTomSelect === 'function') {
-                window.initTomSelect('#assigned_to_user_id', { dropdownParent: 'body', allowEmptyOption: false });
+                window.initTomSelect('#assigned_to_user_id');
             }
         });
         </script>
@@ -673,9 +673,11 @@ switch ($action) {
         $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
 
+        // --- *** THIS IS THE FIX *** ---
         // Data for new "Assigned To" filter dropdown
         $users = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
         $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
+        // --- *** END FIX *** ---
         
         // Initial data load using the helper
         $data = fetchComputersData($pdo, $_GET);
@@ -824,18 +826,19 @@ switch ($action) {
         </div>
         
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-document.addEventListener('app:loaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     
     if (typeof window.initTomSelect === 'function') {
-        // These options are for the filter bar
-        const filterOptions = {
-            dropdownParent: 'parent', // Fixes layout bug
-            allowEmptyOption: false  // Fixes search bar
-        };
-        window.initTomSelect('#category_filter', filterOptions);
-        window.initTomSelect('#status_filter', filterOptions);
-        window.initTomSelect('#assigned_user_filter', filterOptions);
-    }
+                // By setting dropdownParent: null, we override the global
+                // 'dropdownParent: body' setting from footer.php.
+                // This forces these filter dropdowns to render in their
+                // default wrapper, which fixes the layout-breaking bug.
+                const filterOptions = { dropdownParent: null };
+                
+                window.initTomSelect('#category_filter', filterOptions);
+                window.initTomSelect('#status_filter', filterOptions);
+                window.initTomSelect('#assigned_user_filter', filterOptions);
+            }
 
     // --- Select All Checkbox Logic ---
     // This must be attached to a static parent since the checkboxes are dynamic

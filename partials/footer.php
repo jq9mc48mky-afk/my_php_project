@@ -61,22 +61,22 @@
 <script src="assets/js/flatpickr.min.js"></script>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-    // --- STEP 1: DEFINE ALL HELPER FUNCTIONS ---
-    // We define these first, in the global scope, so they
-    // are guaranteed to exist before any listeners run.
-
+    // Global Helpers
     window.initTomSelect = (selector, userOptions = {}) => {
         const el = document.querySelector(selector);
         if (el) {
             const defaultOptions = {
                 create: false,
-                sortField: { field: "text", direction: "asc" }
+                sortField: { field: "text", direction: "asc" },
+                allowEmptyOption: false,
+                dropdownParent: 'body' // Fix for modal clipping
             };
             return new TomSelect(el, { ...defaultOptions, ...userOptions });
         }
         return null;
     };
 
+    // *** Flatpickr Helper ***
     window.initFlatpickr = (selector, userOptions = {}, cspNonce) => {
         const el = document.querySelector(selector);
         if (el) {
@@ -99,42 +99,25 @@
         if (el) new bootstrap.Modal(el).show();
     };
 
-    window.showToast = (message, type = 'success') => {
-        const container = document.querySelector('.toast-container');
-        if (!container) return;
-        const id = 'toast-' + Math.random().toString(36).substring(2, 9);
-        const bg = (type === 'success') ? 'bg-success' : 'bg-danger';
-        const icon = (type === 'success') ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-        const html = `
-            <div class="toast align-items-center text-white ${bg} border-0" role="alert" aria-live="assertive" aria-atomic="true" id="${id}">
-                <div class="d-flex">
-                    <div class="toast-body"><i class="bi ${icon} me-2"></i> ${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>`;
-        container.insertAdjacentHTML('beforeend', html);
-        const el = document.getElementById(id);
-        const toast = new bootstrap.Toast(el, { delay: 5000 });
-        el.addEventListener('hidden.bs.toast', () => el.remove());
-        toast.show();
-    };
-
-    // --- STEP 2: RUN ALL PAGE LOGIC IN ONE DOMCONTENTLOADED LISTENER ---
-    
     document.addEventListener('DOMContentLoaded', function() {
         
-        // --- Mini Sidebar Toggle Logic ---
+        // --- NEW: Mini Sidebar Toggle Logic ---
         const sidebarToggle = document.getElementById('sidebarToggle');
+        
+        // Check LocalStorage on load
         if (localStorage.getItem('sidebar-minimized') === 'true') {
             document.body.classList.add('sidebar-minimized');
         }
+
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', function() {
                 document.body.classList.toggle('sidebar-minimized');
+                // Save state
                 const isMinimized = document.body.classList.contains('sidebar-minimized');
                 localStorage.setItem('sidebar-minimized', isMinimized);
             });
         }
+        // --- End Mini Sidebar Logic ---
 
         // --- Sidebar Overlay Logic (Mobile) ---
         const sidebar = document.getElementById('sidebarMenu');
@@ -149,6 +132,26 @@
         }
 
         // --- Toast Notification Logic ---
+        window.showToast = (message, type = 'success') => {
+            const container = document.querySelector('.toast-container');
+            if (!container) return;
+            const id = 'toast-' + Math.random().toString(36).substring(2, 9);
+            const bg = (type === 'success') ? 'bg-success' : 'bg-danger';
+            const icon = (type === 'success') ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+            const html = `
+                <div class="toast align-items-center text-white ${bg} border-0" role="alert" aria-live="assertive" aria-atomic="true" id="${id}">
+                    <div class="d-flex">
+                        <div class="toast-body"><i class="bi ${icon} me-2"></i> ${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            const el = document.getElementById(id);
+            const toast = new bootstrap.Toast(el, { delay: 5000 });
+            el.addEventListener('hidden.bs.toast', () => el.remove());
+            toast.show();
+        };
+        
         <?php if (isset($_SESSION['success'])): ?>
             window.showToast(<?php echo json_encode($_SESSION['success']); ?>, 'success');
             <?php unset($_SESSION['success']); ?>
@@ -158,7 +161,7 @@
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        // --- Modal Delegation Logic ---
+        // --- Modal Delegation Logic (Delete/Confirm) ---
         const deleteModalEl = document.getElementById('confirmDeleteModal');
         let deleteForm = null;
         if (deleteModalEl) {
@@ -267,23 +270,22 @@
             if (clearBtn) {
                 clearBtn.addEventListener('click', (e) => {
                     e.preventDefault();
+
+                    // --- ADD THIS LOGIC ---
+                    // Manually clear any Tom Select instances before resetting the form
                     filterForm.querySelectorAll('select').forEach(select => {
                         if (select.tomselect) {
                             select.tomselect.clear();
                         }
                     });
+                    // --- END ADD LOGIC ---
+
                     filterForm.reset();
                     window.history.pushState({}, '', window.location.pathname + '?page=' + pageType);
                     fetchData(getUrl(1));
                 });
             }
         }
-
-        // --- STEP 3: FIRE THE "APP LOADED" EVENT ---
-        // This *must* be at the end of this listener, after
-        // all other logic is set up.
-        document.dispatchEvent(new Event('app:loaded'));
-
     });
 </script>
 </body>
