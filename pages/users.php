@@ -422,7 +422,7 @@ $roles = ['Super Admin', 'Admin', 'User'];
 </div>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('app:loaded', function() {
     
     // *** Show/Hide Inactive Checkbox Handler ***
     const showInactiveCheckbox = document.getElementById('showInactive');

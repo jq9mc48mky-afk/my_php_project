@@ -211,7 +211,7 @@ $computers = $pdo->query('SELECT id, asset_tag, model FROM computers ORDER BY as
 
 <!-- *** UPDATED: Initialization Script *** -->
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('app:loaded', function() {
     const addTaskModal = document.getElementById('addTaskModal');
     if (addTaskModal) {
         const form = addTaskModal.querySelector('#addTaskForm');

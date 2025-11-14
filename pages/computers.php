@@ -511,7 +511,7 @@ switch ($action) {
 
         <!-- *** MODIFIED: Client-side validation script for this form *** -->
         <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('app:loaded', function() {
             const computerForm = document.querySelector('form[action="index.php?page=computers&action=<?php echo $action; ?>"]');
             if (computerForm) {
                 const statusSelect = document.getElementById('status');
@@ -554,7 +554,7 @@ switch ($action) {
 
         <!-- *** ADDED: Tom Select Initializer Script *** -->
         <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('app:loaded', function() {
             if (typeof window.initTomSelect === 'function') {
                 // These selects are on the main page, not in a modal
                 window.initTomSelect('#category_id');
@@ -651,7 +651,7 @@ switch ($action) {
         </div>
         <!-- *** ADDED: Tom Select Initializer Script for Checkout page *** -->
         <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('app:loaded', function() {
             if (typeof window.initTomSelect === 'function') {
                 window.initTomSelect('#assigned_to_user_id');
             }
