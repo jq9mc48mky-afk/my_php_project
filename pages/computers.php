@@ -388,7 +388,7 @@ switch ($action) {
         $suppliers = $pdo->query('SELECT id, name FROM suppliers')->fetchAll();
         $users = $pdo->query('SELECT id, username, full_name FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
         // Data for new "Assigned To" filter
-        $users_list = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
+        $users = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
         $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
         
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
@@ -737,7 +737,7 @@ switch ($action) {
                             <label for="assigned_user_id" class="form-label">Assigned To</label>
                             <select class="form-select" id="assigned_user_id" name="assigned_user_id">
                                 <option value="">-- All Users --</option>
-                                <?php foreach ($users_list as $user): ?>
+                                <?php foreach ($users as $user): ?>
                                     <option value="<?php echo $user['id']; ?>" <?php echo ($assigned_user_filter == $user['id']) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($user['full_name']); ?>
                                     </option>
