@@ -202,7 +202,7 @@ $current_page = $data['current_page'];
 </div>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
-document.addEventListener('app:loaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const categoryModal = document.getElementById('categoryModal');
     if (categoryModal) {
         categoryModal.addEventListener('show.bs.modal', function(event) {
