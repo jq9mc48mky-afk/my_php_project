@@ -11,7 +11,9 @@ if ($role != 'Super Admin') {
 // Pagination settings
 $results_per_page = 25;
 $current_page = $_GET['p'] ?? 1;
-if ($current_page < 1) { $current_page = 1; }
+if ($current_page < 1) {
+    $current_page = 1;
+}
 $offset = ($current_page - 1) * $results_per_page;
 
 try {

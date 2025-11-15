@@ -10,7 +10,7 @@ if ($role == 'User') {
 // --- CSV EXPORT HANDLER ---
 // This logic is triggered by index.php *before* header.php is included
 if (isset($_GET['export'])) {
-    
+
     $export_type = $_GET['export'];
     $results = [];
     $headers = [];
@@ -63,7 +63,7 @@ if (isset($_GET['export'])) {
 
         // --- Write CSV Data ---
         $output = fopen('php://output', 'w');
-        
+
         // Write header row
         fputcsv($output, $headers);
 
@@ -71,11 +71,11 @@ if (isset($_GET['export'])) {
         foreach ($results as $row) {
             fputcsv($output, $row); // $row is already indexed numerically or assoc.
         }
-        
+
         fclose($output);
         exit; // Stop script execution
     }
-    
+
     // If we got here, export type was invalid, just fall through to HTML page
 }
 // --- END CSV EXPORT HANDLER ---
@@ -108,7 +108,7 @@ try {
         GROUP BY s.name
         ORDER BY s.name
     ')->fetchAll();
-    
+
 } catch (PDOException $e) {
     echo '<div class="alert alert-danger">Error generating reports: ' . $e->getMessage() . '</div>';
     $status_report = $category_report = $supplier_report = []; // Ensure arrays

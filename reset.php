@@ -42,7 +42,7 @@ if (!$token) {
 // 2. Handle the form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
     validate_csrf_token();
-    
+
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
     $posted_token = $_POST['token']; // Get token from form
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
         try {
             // 3. Success! Hash new password and invalidate the token
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
+
             $stmt = $pdo->prepare('
                 UPDATE users SET 
                     password = ?, 
@@ -69,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
                 WHERE id = ?
             ');
             // Store the ID *before* destroying the user object
-            $user_id_to_log = $user['id']; 
+            $user_id_to_log = $user['id'];
 
             $stmt->execute([$hashed_password, $user_id_to_log]);
-            
+
             $success = 'Your password has been reset successfully!';
             $error = ''; // Clear any previous errors
 

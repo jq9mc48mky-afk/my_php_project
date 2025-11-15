@@ -16,7 +16,7 @@ $admin_user_id = $_SESSION['user_id'];
 // *** UPDATED: CSV EXPORT HANDLER ***
 // This now uses the shared query helper
 if ($action == 'list' && isset($_GET['export']) && $_GET['export'] == 'csv') {
-    
+
     // We pass all GET params to the helper
     $data = fetchComputersData($pdo, $_GET);
     $results = $data['results'];
@@ -26,9 +26,9 @@ if ($action == 'list' && isset($_GET['export']) && $_GET['export'] == 'csv') {
     header('Content-Disposition: attachment; filename="' . $filename . '"');
 
     $output = fopen('php://output', 'w');
-    
+
     fputcsv($output, [
-        'Asset Tag', 'Category', 'Model', 'Serial Number', 'Status', 
+        'Asset Tag', 'Category', 'Model', 'Serial Number', 'Status',
         'Assigned To (Name)', 'Assigned To (Username)',
         'Supplier', 'Purchase Date', 'Warranty Expiry'
     ]);
@@ -48,7 +48,7 @@ if ($action == 'list' && isset($_GET['export']) && $_GET['export'] == 'csv') {
         ];
         fputcsv($output, $csv_row);
     }
-    
+
     fclose($output);
     exit;
 }
@@ -72,7 +72,7 @@ if (isset($_POST['save'])) {
     $warranty_expiry = $_POST['warranty_expiry'] ?: null;
     $assigned_to_user_id = $_POST['assigned_to_user_id'] ?: null;
     $status = $_POST['status'];
-    
+
     // *** MODIFIED: Server-side validation as a security fallback ***
     // Rule 1: If a user is assigned, status MUST be 'Assigned'.
     if (!empty($assigned_to_user_id) && $status !== 'Assigned') {
@@ -94,7 +94,7 @@ if (isset($_POST['save'])) {
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         // Our new function does validation, resize, and save all at once
         $upload_result = process_and_save_image($_FILES['image']);
-        
+
         if (is_array($upload_result)) { // Failure
             $_SESSION['error'] = implode('<br>', $upload_result);
             header('Location: ' . $_SERVER['REQUEST_URI']);
@@ -103,13 +103,13 @@ if (isset($_POST['save'])) {
             $image_to_save = $upload_result;
         }
     }
-    
+
     try {
         if ($id) {
             $stmt_old = $pdo->prepare('SELECT * FROM computers WHERE id = ?');
             $stmt_old->execute([$id]);
             $old_computer = $stmt_old->fetch();
-            
+
             $stmt = $pdo->prepare('
                 UPDATE computers SET asset_tag = ?, category_id = ?, supplier_id = ?, model = ?, 
                 image_filename = ?, serial_number = ?, purchase_date = ?, warranty_expiry = ?, 
@@ -117,11 +117,11 @@ if (isset($_POST['save'])) {
                 WHERE id = ?
             ');
             $stmt->execute([
-                $asset_tag, $category_id, $supplier_id, $model, $image_to_save, $serial_number, 
+                $asset_tag, $category_id, $supplier_id, $model, $image_to_save, $serial_number,
                 $purchase_date, $warranty_expiry, $assigned_to_user_id, $status, $id
             ]);
             $_SESSION['success'] = 'Computer updated successfully.';
-            
+
             if ($image_to_save != $old_image_filename && $old_image_filename) {
                 if (file_exists(UPLOAD_DIR . $old_image_filename)) {
                     unlink(UPLOAD_DIR . $old_image_filename);
@@ -131,17 +131,33 @@ if (isset($_POST['save'])) {
                     unlink(UPLOAD_DIR . $old_thumb);
                 }
             }
-            
+
             $log_details = [];
-            if ($old_computer['asset_tag'] != $asset_tag) { $log_details[] = "Asset Tag changed to '$asset_tag'."; }
-            if ($old_computer['image_filename'] != $image_to_save) { $log_details[] = "Image updated."; }
-            if ($old_computer['category_id'] != $category_id) { $log_details[] = "Category ID changed to '$category_id'."; }
-            if ($old_computer['supplier_id'] != $supplier_id) { $log_details[] = "Supplier ID changed to '$supplier_id'."; }
-            if ($old_computer['model'] != $model) { $log_details[] = "Model changed to '$model'."; }
-            if ($old_computer['serial_number'] != $serial_number) { $log_details[] = "Serial # changed to '$serial_number'."; }
-            if ($old_computer['purchase_date'] != $purchase_date) { $log_details[] = "Purchase Date changed to '$purchase_date'."; }
-            if ($old_computer['warranty_expiry'] != $warranty_expiry) { $log_details[] = "Warranty changed to '$warranty_expiry'."; }
-            if ($old_computer['assigned_to_user_id'] != $assigned_to_user_id) { 
+            if ($old_computer['asset_tag'] != $asset_tag) {
+                $log_details[] = "Asset Tag changed to '$asset_tag'.";
+            }
+            if ($old_computer['image_filename'] != $image_to_save) {
+                $log_details[] = "Image updated.";
+            }
+            if ($old_computer['category_id'] != $category_id) {
+                $log_details[] = "Category ID changed to '$category_id'.";
+            }
+            if ($old_computer['supplier_id'] != $supplier_id) {
+                $log_details[] = "Supplier ID changed to '$supplier_id'.";
+            }
+            if ($old_computer['model'] != $model) {
+                $log_details[] = "Model changed to '$model'.";
+            }
+            if ($old_computer['serial_number'] != $serial_number) {
+                $log_details[] = "Serial # changed to '$serial_number'.";
+            }
+            if ($old_computer['purchase_date'] != $purchase_date) {
+                $log_details[] = "Purchase Date changed to '$purchase_date'.";
+            }
+            if ($old_computer['warranty_expiry'] != $warranty_expiry) {
+                $log_details[] = "Warranty changed to '$warranty_expiry'.";
+            }
+            if ($old_computer['assigned_to_user_id'] != $assigned_to_user_id) {
                 $old_name = 'Unassigned';
                 if ($old_computer['assigned_to_user_id']) {
                     $stmt_name = $pdo->prepare('SELECT full_name, username FROM users WHERE id = ?');
@@ -158,12 +174,12 @@ if (isset($_POST['save'])) {
                         $new_name = "{$user_info['full_name']} (User #{$user_info['username']})";
                     }
                 }
-                $log_details[] = "Assignment changed from '$old_name' to '$new_name'."; 
+                $log_details[] = "Assignment changed from '$old_name' to '$new_name'.";
             }
-            if ($old_computer['status'] != $status) { 
-                $log_details[] = "Status changed from '{$old_computer['status']}' to '$status'."; 
+            if ($old_computer['status'] != $status) {
+                $log_details[] = "Status changed from '{$old_computer['status']}' to '$status'.";
             }
-            
+
             $details = empty($log_details) ? 'Asset details re-saved with no changes.' : implode("\n", $log_details);
             log_asset_change($pdo, $id, $admin_user_id, 'Updated', $details);
 
@@ -174,7 +190,7 @@ if (isset($_POST['save'])) {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ');
             $stmt->execute([
-                $asset_tag, $category_id, $supplier_id, $model, $image_to_save, $serial_number, 
+                $asset_tag, $category_id, $supplier_id, $model, $image_to_save, $serial_number,
                 $purchase_date, $warranty_expiry, $assigned_to_user_id, $status
             ]);
             $_SESSION['success'] = 'Computer added successfully.';
@@ -269,7 +285,7 @@ if ($action == 'delete' && isset($_POST['id'])) {
         $computer_info = $stmt_get->fetch();
         $asset_tag = $computer_info['asset_tag'] ?? 'N/A';
         $image_to_delete = $computer_info['image_filename'] ?? null;
-        
+
         $stmt = $pdo->prepare('DELETE FROM computers WHERE id = ?');
         $stmt->execute([$computer_id_to_delete]);
         $_SESSION['success'] = 'Computer deleted successfully.';
@@ -281,7 +297,7 @@ if ($action == 'delete' && isset($_POST['id'])) {
                 unlink(UPLOAD_DIR . $thumb_to_delete);
             }
         }
-        
+
         $details = "Asset deleted (was tag: '$asset_tag').";
         log_asset_change($pdo, $computer_id_to_delete, $admin_user_id, 'Deleted', $details);
 
@@ -390,9 +406,9 @@ switch ($action) {
         // Data for new "Assigned To" filter
         $users = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
         $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
-        
+
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
-        
+
         ?>
         <h1 class="mb-4"><?php echo $action == 'add' ? 'Add New' : 'Edit'; ?> Computer</h1>
         <div class="card shadow-sm rounded-3">
@@ -481,12 +497,12 @@ switch ($action) {
                             <label for="image" class="form-label">Asset Image</label>
                             <div class="card">
                                 <div class="card-body text-center">
-                                    <?php 
+                                    <?php
                                     $image_path = UPLOAD_DIR . ($computer['image_filename'] ?? 'default.png');
-                                    if (!file_exists($image_path) || empty($computer['image_filename'])) {
-                                        $image_path = 'uploads/placeholder.png';
-                                    }
-                                    ?>
+        if (!file_exists($image_path) || empty($computer['image_filename'])) {
+            $image_path = 'uploads/placeholder.png';
+        }
+        ?>
                                     <img src="<?php echo htmlspecialchars($image_path); ?>" 
                                          alt="Asset Image" 
                                          class="img-fluid rounded mb-3 form-asset-img">
@@ -664,11 +680,11 @@ switch ($action) {
     default:
         // *** MODIFIED: This block is now much simpler ***
         // It just calls the helper functions for the initial page load.
-        
+
         $search_term = $_GET['search'] ?? '';
         $status_filter = $_GET['status_filter'] ?? '';
         $category_filter = $_GET['category_filter'] ?? '';
-        
+
         // Data for filters
         $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
         $statuses = ['In Stock', 'Assigned', 'In Repair', 'Retired'];
@@ -678,22 +694,22 @@ switch ($action) {
         $users = $pdo->query('SELECT id, full_name, username FROM users WHERE is_active = 1 ORDER BY full_name')->fetchAll();
         $assigned_user_filter = $_GET['assigned_user_id'] ?? '';
         // --- *** END FIX *** ---
-        
+
         // Initial data load using the helper
         $data = fetchComputersData($pdo, $_GET);
         $computers = $data['results'];
         $total_pages = $data['total_pages'];
         $current_page = $data['current_page'];
-        
+
         ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Computers</h1>
             <div class="d-flex">
                 <?php
                 $export_params = $_GET;
-                unset($export_params['p']);
-                $export_params['export'] = 'csv';
-                ?>
+        unset($export_params['p']);
+        $export_params['export'] = 'csv';
+        ?>
                 <a href="index.php?<?php echo http_build_query($export_params); ?>" class="btn btn-outline-success me-2">
                     <i class="bi bi-download"></i> Export Filtered CSV
                 </a>
@@ -788,10 +804,10 @@ switch ($action) {
                             </tr>
                         </thead>
                         <tbody id="data-table-body">
-                            <?php 
-                            // Render initial table body using the helper
-                            echo renderComputersTableBody($computers, $role, csrf_input());
-                            ?>
+                            <?php
+                    // Render initial table body using the helper
+                    echo renderComputersTableBody($computers, $role, csrf_input());
+        ?>
                         </tbody>
                     </table>
                 </div>
@@ -800,7 +816,7 @@ switch ($action) {
                     <?php
                     // Render initial pagination using the helper
                     echo renderPagination($current_page, $total_pages, $_GET);
-                    ?>
+        ?>
                 </div>
 
             </div>

@@ -1,4 +1,5 @@
 <?php
+
 // This file contains the data-fetching and query-building logic.
 // It will be shared by the main pages (for initial load) and the new api.php.
 
@@ -10,9 +11,12 @@
  * @param int $results_per_page
  * @return array ['results', 'total_pages']
  */
-function fetchComputersData($pdo, $params, $results_per_page = 10) {
+function fetchComputersData($pdo, $params, $results_per_page = 10)
+{
     $current_page = $params['p'] ?? 1;
-    if ($current_page < 1) { $current_page = 1; }
+    if ($current_page < 1) {
+        $current_page = 1;
+    }
     $offset = ($current_page - 1) * $results_per_page;
 
     $search_term = $params['search'] ?? '';
@@ -32,7 +36,7 @@ function fetchComputersData($pdo, $params, $results_per_page = 10) {
         LEFT JOIN users u ON c.assigned_to_user_id = u.id
     ';
     $sql_count_base = 'SELECT COUNT(*) FROM computers c';
-    
+
     $where_clauses = [];
     $query_params = [];
 
@@ -56,7 +60,7 @@ function fetchComputersData($pdo, $params, $results_per_page = 10) {
         $where_clauses[] = 'c.assigned_to_user_id = ?';
         $query_params[] = $params['assigned_user_id'];
     }
-    
+
     $sql_where = '';
     if (!empty($where_clauses)) {
         $sql_where = ' WHERE ' . implode(' AND ', $where_clauses);
@@ -69,19 +73,19 @@ function fetchComputersData($pdo, $params, $results_per_page = 10) {
 
     $sql_results = $sql_results_base . $sql_where . ' ORDER BY c.asset_tag LIMIT ? OFFSET ?';
     $results_stmt = $pdo->prepare($sql_results);
-    
+
     $param_index = 1;
     foreach ($query_params as $param) {
         $results_stmt->bindValue($param_index++, $param);
     }
     $results_stmt->bindValue($param_index++, $results_per_page, PDO::PARAM_INT);
     $results_stmt->bindValue($param_index++, $offset, PDO::PARAM_INT);
-    
+
     $results_stmt->execute();
     $results = $results_stmt->fetchAll();
 
     return [
-        'results' => $results, 
+        'results' => $results,
         'total_pages' => (int)$total_pages,
         'current_page' => (int)$current_page
     ];
@@ -95,9 +99,12 @@ function fetchComputersData($pdo, $params, $results_per_page = 10) {
  * @param int $results_per_page
  * @return array ['results', 'total_pages']
  */
-function fetchCategoriesData($pdo, $params, $results_per_page = 10) {
+function fetchCategoriesData($pdo, $params, $results_per_page = 10)
+{
     $current_page = $params['p'] ?? 1;
-    if ($current_page < 1) { $current_page = 1; }
+    if ($current_page < 1) {
+        $current_page = 1;
+    }
     $offset = ($current_page - 1) * $results_per_page;
 
     $search_term = $params['search'] ?? '';
@@ -130,9 +137,9 @@ function fetchCategoriesData($pdo, $params, $results_per_page = 10) {
 
     $results_stmt->execute();
     $results = $results_stmt->fetchAll();
-    
+
     return [
-        'results' => $results, 
+        'results' => $results,
         'total_pages' => (int)$total_pages,
         'current_page' => (int)$current_page
     ];
@@ -146,9 +153,12 @@ function fetchCategoriesData($pdo, $params, $results_per_page = 10) {
  * @param int $results_per_page
  * @return array ['results', 'total_pages']
  */
-function fetchSuppliersData($pdo, $params, $results_per_page = 10) {
+function fetchSuppliersData($pdo, $params, $results_per_page = 10)
+{
     $current_page = $params['p'] ?? 1;
-    if ($current_page < 1) { $current_page = 1; }
+    if ($current_page < 1) {
+        $current_page = 1;
+    }
     $offset = ($current_page - 1) * $results_per_page;
 
     $search_term = $params['search'] ?? '';
@@ -181,12 +191,10 @@ function fetchSuppliersData($pdo, $params, $results_per_page = 10) {
 
     $results_stmt->execute();
     $results = $results_stmt->fetchAll();
-    
+
     return [
-        'results' => $results, 
+        'results' => $results,
         'total_pages' => (int)$total_pages,
         'current_page' => (int)$current_page
     ];
 }
-
-?>

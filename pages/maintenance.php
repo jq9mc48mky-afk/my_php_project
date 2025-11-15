@@ -25,7 +25,7 @@ try {
             VALUES (?, ?, ?, ?, ?)
         ');
         $stmt->execute([$computer_id, $current_user_id, $title, $scheduled_date, $notes]);
-        
+
         // Log the system change
         $details = "Scheduled maintenance '$title' for computer ID $computer_id.";
         log_system_change($pdo, $current_user_id, 'Maintenance', $details);
@@ -39,7 +39,7 @@ try {
     if ($action == 'complete' && isset($_POST['id'])) {
         $stmt = $pdo->prepare('UPDATE maintenance_schedule SET completed_date = CURDATE() WHERE id = ?');
         $stmt->execute([$_POST['id']]);
-        
+
         // Log
         log_system_change($pdo, $current_user_id, 'Maintenance', "Marked task ID {$_POST['id']} as complete.");
 
@@ -52,7 +52,7 @@ try {
     if ($action == 'delete' && isset($_POST['id'])) {
         $stmt = $pdo->prepare('DELETE FROM maintenance_schedule WHERE id = ?');
         $stmt->execute([$_POST['id']]);
-        
+
         // Log
         log_system_change($pdo, $current_user_id, 'Maintenance', "Deleted task ID {$_POST['id']}.");
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Processes, resizes, and saves an uploaded image and its thumbnail.
  *
@@ -6,7 +7,8 @@
  * @return string|array The base filename (e.g., 'asset_abc.jpg') on success,
  * or an array of error strings on failure.
  */
-function process_and_save_image($file_data) {
+function process_and_save_image($file_data)
+{
     // --- 1. Validation (Moved from computers.php) ---
     $errors = [];
     if (!isset($file_data) || $file_data['error'] !== UPLOAD_ERR_OK) {
@@ -31,15 +33,18 @@ function process_and_save_image($file_data) {
     // --- 2. Load Image ---
     $source_image = null;
     switch ($mime_type) {
-        case 'image/jpeg': $source_image = imagecreatefromjpeg($file_data['tmp_name']); break;
-        case 'image/png': $source_image = imagecreatefrompng($file_data['tmp_name']); break;
-        case 'image/gif': $source_image = imagecreatefromgif($file_data['tmp_name']); break;
+        case 'image/jpeg': $source_image = imagecreatefromjpeg($file_data['tmp_name']);
+            break;
+        case 'image/png': $source_image = imagecreatefrompng($file_data['tmp_name']);
+            break;
+        case 'image/gif': $source_image = imagecreatefromgif($file_data['tmp_name']);
+            break;
     }
     if (!$source_image) {
         $errors[] = 'Failed to read image data.';
         return $errors;
     }
-    
+
     // Handle PNG transparency
     if ($mime_type == 'image/png') {
         imagealphablending($source_image, false);
@@ -89,7 +94,8 @@ function process_and_save_image($file_data) {
         imagefilledrectangle($thumb_image, 0, 0, $thumb_size, $thumb_size, $transparent);
     }
 
-    $src_x = 0; $src_y = 0;
+    $src_x = 0;
+    $src_y = 0;
     if ($source_width > $source_height) { // Landscape
         $src_x = (int)(($source_width - $source_height) / 2);
         $source_width_crop = $source_height;
@@ -128,4 +134,3 @@ function process_and_save_image($file_data) {
 
     return $base_filename; // Success!
 }
-?>

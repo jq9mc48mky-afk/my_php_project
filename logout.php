@@ -1,4 +1,5 @@
 <?php
+
 require 'csrf.php'; // This will also start the session
 
 // *** HTTP SECURITY HEADERS ***

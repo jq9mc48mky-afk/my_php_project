@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 // Generate a random nonce for CSP
@@ -30,7 +31,7 @@ try {
     // --- DEPENDENCIES ---
     require 'db.php';
     require 'csrf.php';
-    require 'log_helper.php'; 
+    require 'log_helper.php';
 
     $role = $_SESSION['role'];
     $page = $_GET['page'] ?? 'dashboard';
@@ -58,11 +59,11 @@ try {
 
     // Define allowed pages for security
     $allowed_pages = [
-        'dashboard', 
-        'computers', 
-        'suppliers', 
-        'categories', 
-        'users', 
+        'dashboard',
+        'computers',
+        'suppliers',
+        'categories',
+        'users',
         'reports',
         'computer_history',
         'profile',
@@ -111,10 +112,10 @@ try {
     if (ob_get_level()) {
         ob_end_clean();
     }
-    
+
     // A critical database error occurred.
     error_log('Global PDOException: ' . $e->getMessage());
-    
+
     // We must include header/footer here to show the error
     include 'partials/header.php';
     echo '<div class="alert alert-danger">

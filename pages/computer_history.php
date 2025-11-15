@@ -33,7 +33,7 @@ try {
     ');
     $log_stmt->execute([$computer_id]);
     $logs = $log_stmt->fetchAll();
-    
+
     // *** UPDATED: Query 2 (Maintenance Log) ***
     $maint_stmt = $pdo->prepare('
         SELECT m.*, u.username as created_by_username, u.full_name as created_by_full_name
@@ -57,14 +57,14 @@ try {
     <div class="d-flex align-items-center">
         <?php
         $thumb_path = 'uploads/placeholder.png'; // Default
-        if (!empty($computer['image_filename'])) {
-            $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
-            $potential_path = UPLOAD_DIR_HISTORY . $thumb_filename;
-            if (file_exists($potential_path)) {
-                $thumb_path = $potential_path;
-            }
-        }
-        ?>
+if (!empty($computer['image_filename'])) {
+    $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
+    $potential_path = UPLOAD_DIR_HISTORY . $thumb_filename;
+    if (file_exists($potential_path)) {
+        $thumb_path = $potential_path;
+    }
+}
+?>
         <img src="<?php echo htmlspecialchars($thumb_path); ?>" alt="Asset" 
              class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
         <div>
@@ -125,7 +125,19 @@ try {
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <span class="badge <?php if ($log['action'] == 'Created') echo 'bg-success'; elseif ($log['action'] == 'Updated') echo 'bg-primary'; elseif ($log['action'] == 'Deleted') echo 'bg-danger'; elseif ($log['action'] == 'Checked Out') echo 'bg-info text-dark'; elseif ($log['action'] == 'Checked In') echo 'bg-secondary'; else echo 'bg-dark'; ?>">
+                                            <span class="badge <?php if ($log['action'] == 'Created') {
+                                                echo 'bg-success';
+                                            } elseif ($log['action'] == 'Updated') {
+                                                echo 'bg-primary';
+                                            } elseif ($log['action'] == 'Deleted') {
+                                                echo 'bg-danger';
+                                            } elseif ($log['action'] == 'Checked Out') {
+                                                echo 'bg-info text-dark';
+                                            } elseif ($log['action'] == 'Checked In') {
+                                                echo 'bg-secondary';
+                                            } else {
+                                                echo 'bg-dark';
+                                            } ?>">
                                                 <?php echo htmlspecialchars($log['action']); ?>
                                             </span>
                                         </td>

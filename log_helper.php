@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Logs an action related to a computer asset.
  *
@@ -8,7 +9,8 @@
  * @param string $action The type of action (e.g., 'Created', 'Updated', 'Deleted').
  * @param string $details A description of what changed.
  */
-function log_asset_change($pdo, $computer_id, $admin_user_id, $action, $details = '') {
+function log_asset_change($pdo, $computer_id, $admin_user_id, $action, $details = '')
+{
     try {
         $stmt = $pdo->prepare('
             INSERT INTO asset_log (computer_id, admin_user_id, action, details) 
@@ -31,7 +33,8 @@ function log_asset_change($pdo, $computer_id, $admin_user_id, $action, $details 
  * @param string $action_type The general category of action (e.g., 'User Management', 'Category').
  * @param string $details A specific description of the action.
  */
-function log_system_change($pdo, $admin_user_id, $action_type, $details) {
+function log_system_change($pdo, $admin_user_id, $action_type, $details)
+{
     try {
         // Get user's IP address
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
@@ -47,4 +50,3 @@ function log_system_change($pdo, $admin_user_id, $action_type, $details) {
         // We don't stop the user's action if logging fails
     }
 }
-?>

@@ -10,7 +10,8 @@
  * @param string $csrf_token_html HTML string from csrf_input()
  * @return string HTML
  */
-function renderComputersTableBody($computers, $role, $csrf_token_html) {
+function renderComputersTableBody($computers, $role, $csrf_token_html)
+{
     if (empty($computers)) {
         $colspan = ($role != 'User') ? '8' : '6';
         return "<tr><td colspan=\"$colspan\" class=\"text-center\">No computers found.</td></tr>";
@@ -26,7 +27,7 @@ function renderComputersTableBody($computers, $role, $csrf_token_html) {
                 $thumb_path = $potential_path;
             }
         }
-    ?>
+        ?>
         <tr>
             <?php if ($role != 'User'): ?>
                 <td>
@@ -44,11 +45,17 @@ function renderComputersTableBody($computers, $role, $csrf_token_html) {
             <td><?php echo htmlspecialchars($computer['model']); ?></td>
             <td>
                 <span class="badge 
-                    <?php if ($computer['status'] == 'Assigned') echo 'bg-success';
-                          elseif ($computer['status'] == 'In Stock') echo 'bg-secondary';
-                          elseif ($computer['status'] == 'In Repair') echo 'bg-warning text-dark';
-                          elseif ($computer['status'] == 'Retired') echo 'bg-danger';
-                          else echo 'bg-light text-dark'; ?>
+                    <?php if ($computer['status'] == 'Assigned') {
+                        echo 'bg-success';
+                    } elseif ($computer['status'] == 'In Stock') {
+                        echo 'bg-secondary';
+                    } elseif ($computer['status'] == 'In Repair') {
+                        echo 'bg-warning text-dark';
+                    } elseif ($computer['status'] == 'Retired') {
+                        echo 'bg-danger';
+                    } else {
+                        echo 'bg-light text-dark';
+                    } ?>
                 ">
                     <?php echo htmlspecialchars($computer['status']); ?>
                 </span>
@@ -74,7 +81,7 @@ function renderComputersTableBody($computers, $role, $csrf_token_html) {
                         data-confirm-message="Are you sure you want to check this asset back in? This will set its status to 'In Stock' and unassign it."
                         data-confirm-button-text="Check In"
                         data-confirm-button-class="btn-success">
-                        <?php echo $csrf_token_html; // MODIFIED ?>
+                        <?php echo $csrf_token_html; // MODIFIED?>
                         <input type="hidden" name="computer_id" value="<?php echo $computer['id']; ?>">
                         <input type="hidden" name="check_in" value="true">
                         <button type="submit" class="btn btn-sm btn-outline-success" title="Check In">
@@ -92,7 +99,7 @@ function renderComputersTableBody($computers, $role, $csrf_token_html) {
                 
                 <form method="POST" action="index.php?page=computers&action=delete" style="display:inline-block;" class="form-confirm-delete" 
                     data-confirm-message="Are you sure you want to <strong>permanently delete</strong> this computer? All its associated history will be lost. <strong>This action cannot be undone.</strong>">
-                    <?php echo $csrf_token_html; // MODIFIED ?>
+                    <?php echo $csrf_token_html; // MODIFIED?>
                     <input type="hidden" name="id" value="<?php echo $computer['id']; ?>">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                         <i class="bi bi-trash-fill"></i>
@@ -113,14 +120,15 @@ function renderComputersTableBody($computers, $role, $csrf_token_html) {
  * @param string $csrf_token_html HTML string from csrf_input()
  * @return string HTML
  */
-function renderCategoriesTableBody($categories, $csrf_token_html) {
+function renderCategoriesTableBody($categories, $csrf_token_html)
+{
     if (empty($categories)) {
         return '<tr><td colspan="3" class="text-center">No categories found.</td></tr>';
     }
 
     ob_start();
     foreach ($categories as $category):
-    ?>
+        ?>
         <tr>
             <td><?php echo htmlspecialchars($category['name']); ?></td>
             <td><?php echo htmlspecialchars($category['description'] ?? 'N/A'); ?></td>
@@ -135,7 +143,7 @@ function renderCategoriesTableBody($categories, $csrf_token_html) {
                 </button>
                 <form method="POST" action="index.php?page=categories" style="display:inline-block;" class="form-confirm-delete" 
                     data-confirm-message="Are you sure you want to <strong>permanently delete</strong> this category? <p><strong>This action cannot be undone.</strong></p> (Note: The system will prevent deletion if this category is linked to any computers.)">
-                    <?php echo $csrf_token_html; // MODIFIED ?>
+                    <?php echo $csrf_token_html; // MODIFIED?>
                     <input type="hidden" name="delete_id" value="<?php echo $category['id']; ?>">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                         <i class="bi bi-trash-fill"></i>
@@ -155,14 +163,15 @@ function renderCategoriesTableBody($categories, $csrf_token_html) {
  * @param string $csrf_token_html HTML string from csrf_input()
  * @return string HTML
  */
-function renderSuppliersTableBody($suppliers, $csrf_token_html) {
+function renderSuppliersTableBody($suppliers, $csrf_token_html)
+{
     if (empty($suppliers)) {
         return '<tr><td colspan="5" class="text-center">No suppliers found.</td></tr>';
     }
 
     ob_start();
     foreach ($suppliers as $supplier):
-    ?>
+        ?>
         <tr>
             <td><?php echo htmlspecialchars($supplier['name']); ?></td>
             <td><?php echo htmlspecialchars($supplier['contact_person'] ?? 'N/A'); ?></td>
@@ -181,7 +190,7 @@ function renderSuppliersTableBody($suppliers, $csrf_token_html) {
                 </button>
                 <form method="POST" action="index.php?page=suppliers" style="display:inline-block;" class="form-confirm-delete" 
                     data-confirm-message="Are you sure you want to <strong>permanently delete</strong> this supplier? <p><strong>This action cannot be undone.</strong></p> (Note: The system will prevent deletion if this supplier is linked to any computers.)">
-                    <?php echo $csrf_token_html; // MODIFIED ?>
+                    <?php echo $csrf_token_html; // MODIFIED?>
                     <input type="hidden" name="delete_id" value="<?php echo $supplier['id']; ?>">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                         <i class="bi bi-trash-fill"></i>
@@ -202,7 +211,8 @@ function renderSuppliersTableBody($suppliers, $csrf_token_html) {
  * @param array $query_params
  * @return string HTML
  */
-function renderPagination($current_page, $total_pages, $query_params) {
+function renderPagination($current_page, $total_pages, $query_params)
+{
     if ($total_pages <= 1) {
         return '';
     }
@@ -219,9 +229,9 @@ function renderPagination($current_page, $total_pages, $query_params) {
             </li>
 
             <!-- Page Number Buttons -->
-            <?php for ($i = 1; $i <= $total_pages; $i++): 
+            <?php for ($i = 1; $i <= $total_pages; $i++):
                 $query_params['p'] = $i;
-            ?>
+                ?>
                 <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
                     <a class="page-link" href="?<?php echo http_build_query($query_params); ?>"><?php echo $i; ?></a>
                 </li>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CSRF Protection
  * Call session_start() if not already started.
@@ -12,7 +13,8 @@ if (session_status() == PHP_SESSION_NONE) {
  *
  * @return string The CSRF token.
  */
-function get_csrf_token() {
+function get_csrf_token()
+{
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
@@ -23,7 +25,8 @@ function get_csrf_token() {
  * Validates the CSRF token from a POST request.
  * Dies with an error message if validation fails.
  */
-function validate_csrf_token() {
+function validate_csrf_token()
+{
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
         // Token is missing or invalid.
         // Clear token to be safe and die.
@@ -37,7 +40,7 @@ function validate_csrf_token() {
  *
  * @return string HTML input field.
  */
-function csrf_input() {
+function csrf_input()
+{
     return '<input type="hidden" name="csrf_token" value="' . get_csrf_token() . '">';
 }
-?>

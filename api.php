@@ -1,120 +1,113 @@
 <?php
+/**
+ * AJAX API Endpoint
+ *
+ * Handles all asynchronous data requests for filtering, pagination,
+ * and other dynamic actions (like generating reset tokens).
+ *
+ * All responses are in JSON format.
+ */
+
 // Set content type to JSON immediately.
 header('Content-Type: application/json');
 
 /**
- * Set a custom error handler.
- * This will catch all PHP Notices, Warnings, and Errors
- * and convert them into an Exception we can catch.
+ * Custom Error Handler
+ * This function catches all PHP Notices, Warnings, and Errors
+ * and converts them into an Exception that our main try/catch
+ * block can handle, ensuring a clean JSON error response.
  */
-set_error_handler(function($severity, $message, $file, $line) {
+set_error_handler(function ($severity, $message, $file, $line) {
     if (!(error_reporting() & $severity)) {
         // This error is not one we're reporting.
         return;
     }
-    // Throw an ErrorException that our main try/catch block will find.
+    // Throw an ErrorException
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
-// Start session and check authentication
+// Main execution block
 try {
     session_start();
-    
-    // --- INCLUDE DEPENDENCIES FIRST ---
+
+    // --- Include Dependencies ---
     require 'db.php';
-    require 'csrf.php'; // Make sure this is required
+    require 'csrf.php';
     require 'log_helper.php';
     require 'ajax_query_helpers.php';
     require 'ajax_render_helpers.php';
 
-    // --- NOW VALIDATE, INSIDE THE TRY BLOCK ---
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        validate_csrf_token(); // This will now throw an Exception if it fails
+    // --- Security & Authentication ---
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // This will throw an Exception if it fails
+        validate_csrf_token();
     }
 
-if (!isset($_SESSION['user_id'])) {
-    header('HTTP/1.1 401 Unauthorized');
-    throw new Exception('Access Denied. Please log in.');
-}
+    if (!isset($_SESSION['user_id'])) {
+        header('HTTP/1.1 401 Unauthorized');
+        throw new Exception('Access Denied. Please log in.');
+    }
 
-// Set content type to JSON
-header('Content-Type: application/json');
+    // --- Request Parameters ---
+    $type = $_GET['type'] ?? '';
+    $role = $_SESSION['role']; // For correct button rendering
+    $params = $_GET; // All GET params for query functions
 
+    // Base query params for pagination links
+    $query_params = $_GET;
+    unset($query_params['type']); // Not needed in pagination links
 
+    // --- Response Variables ---
+    $data = null;
+    $tableBodyHtml = '';
+    $paginationHtml = '';
 
-// Get request parameters
-$type = $_GET['type'] ?? '';
-$role = $_SESSION['role']; // For correct button rendering
-$csrf_token = get_csrf_token(); // For rendering forms
-
-// Get all GET params for query functions
-$params = $_GET; 
-
-// Base query params for pagination links
-$query_params = $_GET;
-unset($query_params['type']); // This is not needed in the pagination links
-
-$data = null;
-$results = [];
-$total_pages = 0;
-$current_page = 1;
-$tableBodyHtml = '';
-$paginationHtml = '';
-
-
+    // --- API Routing (based on 'type' parameter) ---
     switch ($type) {
         case 'computers':
             if (!defined('UPLOAD_DIR')) {
                 define('UPLOAD_DIR', 'uploads/'); // Define for render helper
             }
             $data = fetchComputersData($pdo, $params);
-            // *** MODIFIED: Pass csrf_token() string, not the function
             $tableBodyHtml = renderComputersTableBody($data['results'], $role, csrf_input());
             break;
 
         case 'categories':
-            if ($role == 'User') { // Or whatever role CANNOT see categories
+            if ($role === 'User') {
                 header('HTTP/1.1 403 Forbidden');
-                echo json_encode(['error' => 'Access Denied.']);
-                exit;
+                throw new Exception('Access Denied.');
             }
             $data = fetchCategoriesData($pdo, $params);
-            // *** MODIFIED: Pass csrf_token() string, not the function
             $tableBodyHtml = renderCategoriesTableBody($data['results'], csrf_input());
             break;
 
         case 'suppliers':
-            if ($role == 'User') {
+            if ($role === 'User') {
                 header('HTTP/1.1 403 Forbidden');
-                echo json_encode(['error' => 'Access Denied.']);
-                exit;
+                throw new Exception('Access Denied.');
             }
             $data = fetchSuppliersData($pdo, $params);
-            // *** MODIFIED: Pass csrf_token() string, not the function
             $tableBodyHtml = renderSuppliersTableBody($data['results'], csrf_input());
             break;
 
         case 'generate-reset-token':
-            if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 header('HTTP/1.1 405 Method Not Allowed');
-                echo json_encode(['error' => 'POST method required.']);
-                exit;
+                throw new Exception('POST method required.');
             }
 
             // Only Super Admins can do this
-            if ($role != 'Super Admin') {
+            if ($role !== 'Super Admin') {
                 header('HTTP/1.1 403 Forbidden');
-                echo json_encode(['error' => 'Access Denied.']);
-                exit;
+                throw new Exception('Access Denied.');
             }
 
             $user_id = (int)($_POST['user_id'] ?? 0);
             if ($user_id <= 0) {
                 header('HTTP/1.1 400 Bad Request');
-                echo json_encode(['error' => 'Invalid user ID.']);
-                exit;
+                throw new Exception('Invalid user ID.');
             }
-            
+
             // 1. Generate secure token and expiry
             $token = bin2hex(random_bytes(32)); // 64-character hex string
 
@@ -133,57 +126,53 @@ $paginationHtml = '';
             $username = $stmt_user->fetchColumn();
             log_system_change($pdo, $_SESSION['user_id'], 'Security', "Generated password reset link for user $username (ID: $user_id).");
 
-            // 4. Send back the token
+            // 4. Send back the token (and exit)
             echo json_encode(['token' => $token]);
-            exit; // Exit here, we don't need the table/pagination logic
+            exit;
 
         default:
             header('HTTP/1.1 400 Bad Request');
-            echo json_encode(['error' => 'Invalid request type.']);
-            exit;
+            throw new Exception('Invalid request type.');
     }
 
-    // Common data extraction and pagination rendering
-    $results = $data['results'];
-    $total_pages = $data['total_pages'];
-    $current_page = $data['current_page'];
-    
+    // --- Common data extraction and pagination rendering for list types ---
+    $total_pages = $data['total_pages'] ?? 0;
+    $current_page = $data['current_page'] ?? 1;
+
     $paginationHtml = renderPagination($current_page, $total_pages, $query_params);
 
-    // Send the successful response
+    // --- Send the successful response ---
     echo json_encode([
         'tableBody' => $tableBodyHtml,
         'pagination' => $paginationHtml
     ]);
 
 } catch (PDOException $e) {
+    // Database exceptions
     header('HTTP/1.1 500 Internal Server Error');
     error_log('API PDOException: ' . $e->getMessage());
     echo json_encode(['error' => 'A database error occurred.']);
 
-// --- ADD THIS NEW CATCH BLOCK ---
-    } catch (ErrorException $e) {
-        // This will now catch all those PHP Notices/Warnings!
-        header('HTTP/1.1 500 Internal Server Error');
-        error_log('API ErrorException: ' . $e->getMessage());
-        echo json_encode([
-            'error' => 'An internal server error occurred.', 
-            'details' => $e->getMessage() // This will show you the *real* error
-        ]);
-    // --- END NEW BLOCK ---
+} catch (ErrorException $e) {
+    // PHP errors (from set_error_handler)
+    header('HTTP/1.1 500 Internal Server Error');
+    error_log('API ErrorException: ' . $e->getMessage());
+    echo json_encode([
+        'error' => 'An internal server error occurred.',
+        'details' => $e->getMessage() // Shows the actual PHP error
+    ]);
 
 } catch (Exception $e) {
+    // All other exceptions (CSRF, Access Denied, etc.)
     if (!headers_sent()) {
-        if (http_response_code() == 200) { 
+        if (http_response_code() === 200) {
+            // Set a generic 500 error if no specific one was set
             header('HTTP/1.1 500 Internal Server Error');
         }
     }
-    
     error_log('API Exception: ' . $e->getMessage());
     echo json_encode([
         'error' => 'An error occurred.',
-        'details' => $e->getMessage() // This will now show "Invalid CSRF token."
+        'details' => $e->getMessage() // Shows "Invalid CSRF token." etc.
     ]);
 }
-
-?>

@@ -36,7 +36,7 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         ");
         $stale_repairs_stmt->execute();
         $stale_repairs = $stale_repairs_stmt->fetchAll();
-        
+
         $upcoming_maint_stmt = $pdo->prepare("
             SELECT m.id, m.scheduled_date, c.asset_tag, c.id as computer_id
             FROM maintenance_schedule m
@@ -48,14 +48,14 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         ");
         $upcoming_maint_stmt->execute();
         $upcoming_maint = $upcoming_maint_stmt->fetchAll();
-        
+
     } catch (PDOException $e) {
         echo '<div class="alert alert-danger">Could not fetch stats: ' . $e->getMessage() . '</div>';
         $expiring_warranties = [];
         $stale_repairs = [];
         $upcoming_maint = [];
     }
-?>
+    ?>
     <h1 class="mb-4">Admin Dashboard</h1>
     <div class="row g-4">
         <div class="col-md-6 col-lg-3">
@@ -203,7 +203,7 @@ if ($role == 'Admin' || $role == 'Super Admin') {
     </div>
 
 <?php
-// --- User Dashboard ---
+    // --- User Dashboard ---
 } else {
     try {
         $user_id = $_SESSION['user_id'];
@@ -218,7 +218,7 @@ if ($role == 'Admin' || $role == 'Super Admin') {
     } catch (PDOException $e) {
         echo '<div class="alert alert-danger">Could not fetch assigned computers: ' . $e->getMessage() . '</div>';
     }
-?>
+    ?>
     <h1 class="mb-4">My Dashboard</h1>
     <p class="lead">Welcome, <?php echo htmlspecialchars($_SESSION['full_name']); ?>. Here are the assets assigned to you.</p>
 
@@ -246,16 +246,16 @@ if ($role == 'Admin' || $role == 'Super Admin') {
                             <?php foreach ($my_computers as $computer): ?>
                                 <tr>
                                     <td>
-                                        <?php 
-                                        $thumb_path = 'uploads/placeholder.png'; // Default
-                                        if (!empty($computer['image_filename'])) {
-                                            $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
-                                            $potential_path = UPLOAD_DIR . $thumb_filename;
-                                            if (file_exists($potential_path)) {
-                                                $thumb_path = $potential_path;
-                                            }
-                                        }
-                                        ?>
+                                        <?php
+                                            $thumb_path = 'uploads/placeholder.png'; // Default
+                                if (!empty($computer['image_filename'])) {
+                                    $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
+                                    $potential_path = UPLOAD_DIR . $thumb_filename;
+                                    if (file_exists($potential_path)) {
+                                        $thumb_path = $potential_path;
+                                    }
+                                }
+                                ?>
                                         <img src="<?php echo htmlspecialchars($thumb_path); ?>" alt="Asset" 
                                              class="img-thumbnail list-asset-img">
                                     </td>
@@ -265,9 +265,13 @@ if ($role == 'Admin' || $role == 'Super Admin') {
                                     <td><?php echo htmlspecialchars($computer['serial_number'] ?? 'N/A'); ?></td>
                                     <td>
                                         <span class="badge 
-                                            <?php if ($computer['status'] == 'Assigned') echo 'bg-success';
-                                                  elseif ($computer['status'] == 'In Repair') echo 'bg-warning text-dark';
-                                                  else echo 'bg-secondary'; ?>
+                                            <?php if ($computer['status'] == 'Assigned') {
+                                                echo 'bg-success';
+                                            } elseif ($computer['status'] == 'In Repair') {
+                                                echo 'bg-warning text-dark';
+                                            } else {
+                                                echo 'bg-secondary';
+                                            } ?>
                                         ">
                                             <?php echo htmlspecialchars($computer['status']); ?>
                                         </span>
@@ -280,5 +284,5 @@ if ($role == 'Admin' || $role == 'Super Admin') {
             <?php endif; ?>
         </div>
     </div>
-<?php } 
+<?php }
 ?>

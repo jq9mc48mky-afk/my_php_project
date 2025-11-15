@@ -27,14 +27,14 @@ if (isset($_POST['change_password'])) {
 
             // 3. Verify current password
             if ($user && password_verify($current_password, $user['password'])) {
-                
+
                 // 4. Hash and update new password
                 $new_hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
                 $update_stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
                 $update_stmt->execute([$new_hashed_password, $user_id]);
 
                 $_SESSION['success'] = 'Your password has been updated successfully.';
-                
+
                 // --- Log Action ---
                 $details = "User (ID: $user_id, Username: {$_SESSION['username']}) changed their own password.";
                 log_system_change($pdo, $user_id, 'Security', $details);
@@ -49,7 +49,7 @@ if (isset($_POST['change_password'])) {
             error_log('Profile password change error: ' . $e->getMessage());
         }
     }
-    
+
     // Redirect back to dashboard page to show message
     header('Location: index.php?page=dashboard');
     exit;

@@ -1,6 +1,6 @@
 <?php
 // Include CSRF functions first
-require 'csrf.php'; 
+require 'csrf.php';
 // session_start() is called inside csrf.php if not already started
 
 // *** HTTP SECURITY HEADERS ***
@@ -29,14 +29,13 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     validate_csrf_token();
-    
+
     $username = $_POST['username'];
     $password = $_POST['password'];
 
     if (strlen($password) < MIN_PASSWORD_LENGTH) {
         $error = 'Invalid username or password.';
-    }
-    else {
+    } else {
         try {
             // Find user in the database
             $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? AND is_active = 1');
@@ -45,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             if ($user && password_verify($password, $user['password'])) {
                 session_regenerate_id(true);
-                
+
                 // *** UPDATED: Set session variables ***
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];

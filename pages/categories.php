@@ -17,7 +17,7 @@ if (isset($_POST['save'])) {
     $name = $_POST['name'];
     $description = $_POST['description'] ?: null;
     $admin_user_id = $_SESSION['user_id'];
-    
+
     try {
         if ($id) {
             // --- Log what's being changed ---
@@ -32,8 +32,12 @@ if (isset($_POST['save'])) {
 
             // --- Log Action ---
             $details = "Category (ID: $id) updated.\n";
-            if ($old_data['name'] != $name) $details .= "Name changed from '{$old_data['name']}' to '$name'.\n";
-            if ($old_data['description'] != $description) $details .= "Description changed.\n";
+            if ($old_data['name'] != $name) {
+                $details .= "Name changed from '{$old_data['name']}' to '$name'.\n";
+            }
+            if ($old_data['description'] != $description) {
+                $details .= "Description changed.\n";
+            }
             log_system_change($pdo, $admin_user_id, 'Category', $details);
             // --- End Log ---
 
@@ -52,7 +56,7 @@ if (isset($_POST['save'])) {
         exit;
     } catch (PDOException $e) {
         $_SESSION['error'] = 'Database error: ' . $e->getMessage();
-        header('Location: index.php?page=categories'); 
+        header('Location: index.php?page=categories');
         exit;
     }
 }
@@ -155,7 +159,7 @@ $current_page = $data['current_page'];
                     <?php
                     // Render initial table body using the helper
                     echo renderCategoriesTableBody($categories, csrf_input());
-                    ?>
+?>
                 </tbody>
             </table>
         </div>
@@ -165,7 +169,7 @@ $current_page = $data['current_page'];
             <?php
             // Render initial pagination using the helper
             echo renderPagination($current_page, $total_pages, $_GET);
-            ?>
+?>
         </div>
 
     </div>

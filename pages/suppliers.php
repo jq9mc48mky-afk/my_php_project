@@ -34,10 +34,18 @@ if (isset($_POST['save'])) {
 
             // --- Log Action ---
             $details = "Supplier (ID: $id) updated.\n";
-            if ($old_data['name'] != $name) $details .= "Name changed from '{$old_data['name']}' to '$name'.\n";
-            if ($old_data['contact_person'] != $contact_person) $details .= "Contact changed from '{$old_data['contact_person']}' to '$contact_person'.\n";
-            if ($old_data['phone'] != $phone) $details .= "Phone changed from '{$old_data['phone']}' to '$phone'.\n";
-            if ($old_data['email'] != $email) $details .= "Email changed from '{$old_data['email']}' to '$email'.\n";
+            if ($old_data['name'] != $name) {
+                $details .= "Name changed from '{$old_data['name']}' to '$name'.\n";
+            }
+            if ($old_data['contact_person'] != $contact_person) {
+                $details .= "Contact changed from '{$old_data['contact_person']}' to '$contact_person'.\n";
+            }
+            if ($old_data['phone'] != $phone) {
+                $details .= "Phone changed from '{$old_data['phone']}' to '$phone'.\n";
+            }
+            if ($old_data['email'] != $email) {
+                $details .= "Email changed from '{$old_data['email']}' to '$email'.\n";
+            }
             log_system_change($pdo, $admin_user_id, 'Supplier', $details);
             // --- End Log ---
 
@@ -65,7 +73,7 @@ if (isset($_POST['save'])) {
 if (isset($_POST['delete_id'])) {
     $delete_id = $_POST['delete_id'];
     $admin_user_id = $_SESSION['user_id'];
-    
+
     try {
         // --- Get data before deleting for log ---
         $stmt_get = $pdo->prepare('SELECT * FROM suppliers WHERE id = ?');
@@ -161,7 +169,7 @@ $current_page = $data['current_page'];
                     <?php
                     // Render initial table body using the helper
                     echo renderSuppliersTableBody($suppliers, csrf_input());
-                    ?>
+?>
                 </tbody>
             </table>
         </div>
@@ -171,7 +179,7 @@ $current_page = $data['current_page'];
             <?php
             // Render initial pagination using the helper
             echo renderPagination($current_page, $total_pages, $_GET);
-            ?>
+?>
         </div>
 
     </div>

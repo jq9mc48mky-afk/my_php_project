@@ -90,10 +90,18 @@ if (isset($_POST['save'])) {
 
             // --- Log Action ---
             $details = "User (ID: $id, Username: $username) updated.\n";
-            if ($old_data['username'] != $username) $details .= "Username changed from '{$old_data['username']}' to '$username'.\n";
-            if ($old_data['full_name'] != $full_name) $details .= "Full Name changed from '{$old_data['full_name']}' to '$full_name'.\n";
-            if ($old_data['role'] != $user_role) $details .= "Role changed from '{$old_data['role']}' to '$user_role'.\n";
-            if (!empty($password)) $details .= "Password updated.\n";
+            if ($old_data['username'] != $username) {
+                $details .= "Username changed from '{$old_data['username']}' to '$username'.\n";
+            }
+            if ($old_data['full_name'] != $full_name) {
+                $details .= "Full Name changed from '{$old_data['full_name']}' to '$full_name'.\n";
+            }
+            if ($old_data['role'] != $user_role) {
+                $details .= "Role changed from '{$old_data['role']}' to '$user_role'.\n";
+            }
+            if (!empty($password)) {
+                $details .= "Password updated.\n";
+            }
             log_system_change($pdo, $admin_user_id, 'User Management', $details);
             // --- End Log ---
 
@@ -186,7 +194,7 @@ if (isset($_POST['delete_id'])) {
 // *** NEW: Handle Reactivate ***
 if (isset($_POST['reactivate_id'])) {
     $reactivate_id = (int)$_POST['reactivate_id'];
-    
+
     try {
         $stmt = $pdo->prepare('UPDATE users SET is_active = 1 WHERE id = ?');
         $stmt->execute([$reactivate_id]);
@@ -203,7 +211,7 @@ if (isset($_POST['reactivate_id'])) {
     } catch (PDOException $e) {
         $_SESSION['error'] = 'Database error: ' . $e->getMessage();
     }
-    
+
     header('Location: index.php?page=users' . (isset($_GET['show_inactive']) ? '&show_inactive=1' : ''));
     exit;
 }
@@ -262,9 +270,13 @@ $roles = ['Super Admin', 'Admin', 'User'];
                         <td><?php echo htmlspecialchars($user['username']); ?></td>
                         <td>
                             <span class="badge 
-                                <?php if ($user['role'] == 'Super Admin') echo 'bg-danger';
-                                      elseif ($user['role'] == 'Admin') echo 'bg-warning text-dark';
-                                      else echo 'bg-success'; ?>
+                                <?php if ($user['role'] == 'Super Admin') {
+                                    echo 'bg-danger';
+                                } elseif ($user['role'] == 'Admin') {
+                                    echo 'bg-warning text-dark';
+                                } else {
+                                    echo 'bg-success';
+                                } ?>
                             ">
                                 <?php echo htmlspecialchars($user['role']); ?>
                             </span>
