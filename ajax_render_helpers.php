@@ -1,26 +1,40 @@
 <?php
-// This file contains the HTML rendering logic for table bodies and pagination.
-// It will be shared by the main pages (for initial load) and the new api.php.
+/**
+ * AJAX HTML Render Helpers
+ *
+ * This file contains functions that generate the HTML for table bodies
+ * and pagination controls. They are used by both the main page files
+ * (for the initial page load) and by api.php (to generate HTML for
+ * AJAX responses).
+ *
+ * Using output buffering (ob_start/ob_get_clean) allows us to write
+ * complex HTML with embedded PHP logic easily.
+ */
 
 /**
- * Renders the HTML for the computers table body.
+ * Renders the HTML for the computers table body (all the <tr>...</tr> rows).
  *
- * @param array $computers
- * @param string $role
- * @param string $csrf_token_html HTML string from csrf_input()
- * @return string HTML
+ * @param array $computers The array of computer data from fetchComputersData().
+ * @param string $role The role of the current user (to show/hide admin buttons).
+ * @param string $csrf_token_html The HTML string from csrf_input() to be
+ * embedded in all mini-forms.
+ * @return string The generated HTML for the <tbody>.
  */
 function renderComputersTableBody($computers, $role, $csrf_token_html)
 {
+    // Handle the "No results" case
     if (empty($computers)) {
-        $colspan = ($role != 'User') ? '8' : '6';
+        $colspan = ($role != 'User') ? '8' : '6'; // Adjust colspan based on role
         return "<tr><td colspan=\"$colspan\" class=\"text-center\">No computers found.</td></tr>";
     }
 
+    // Start output buffering
     ob_start();
     foreach ($computers as $computer):
+        // --- Thumbnail Logic ---
         $thumb_path = 'uploads/placeholder.png'; // Default
         if (!empty($computer['image_filename'])) {
+            // e.g., 'image.jpg' -> 'image_thumb.jpg'
             $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
             $potential_path = UPLOAD_DIR . $thumb_filename;
             if (file_exists($potential_path)) {
@@ -29,6 +43,7 @@ function renderComputersTableBody($computers, $role, $csrf_token_html)
         }
         ?>
         <tr>
+            <!-- Admin-only column: Checkbox for bulk actions -->
             <?php if ($role != 'User'): ?>
                 <td>
                     <input class="form-check-input item-checkbox" type="checkbox" 
@@ -44,6 +59,7 @@ function renderComputersTableBody($computers, $role, $csrf_token_html)
             <td><?php echo htmlspecialchars($computer['category_name'] ?? 'N/A'); ?></td>
             <td><?php echo htmlspecialchars($computer['model']); ?></td>
             <td>
+                <!-- Dynamic status badge color -->
                 <span class="badge 
                     <?php if ($computer['status'] == 'Assigned') {
                         echo 'bg-success';
@@ -69,19 +85,22 @@ function renderComputersTableBody($computers, $role, $csrf_token_html)
                     Unassigned
                 <?php endif; ?>
             </td>
+            <!-- Admin-only column: Action buttons -->
             <?php if ($role != 'User'): ?>
             <td>
+                <!-- Conditional Check-in/Check-out buttons -->
                 <?php if ($computer['status'] == 'In Stock'): ?>
                     <a href="index.php?page=computers&action=checkout&id=<?php echo $computer['id']; ?>" class="btn btn-sm btn-success" title="Check Out">
                         <i class="bi bi-box-arrow-up-right"></i> Check Out
                     </a>
                 <?php elseif ($computer['status'] == 'Assigned'): ?>
+                    <!-- This "Check In" form is intercepted by global JS (footer.php) -->
                     <form method="POST" action="index.php?page=computers" style="display:inline-block;" class="form-confirm-action"
                         data-confirm-title="Confirm Check-In"
                         data-confirm-message="Are you sure you want to check this asset back in? This will set its status to 'In Stock' and unassign it."
                         data-confirm-button-text="Check In"
                         data-confirm-button-class="btn-success">
-                        <?php echo $csrf_token_html; // MODIFIED?>
+                        <?php echo $csrf_token_html; // Inject CSRF token?>
                         <input type="hidden" name="computer_id" value="<?php echo $computer['id']; ?>">
                         <input type="hidden" name="check_in" value="true">
                         <button type="submit" class="btn btn-sm btn-outline-success" title="Check In">
@@ -90,6 +109,7 @@ function renderComputersTableBody($computers, $role, $csrf_token_html)
                     </form>
                 <?php endif; ?>
 
+                <!-- Standard action buttons -->
                 <a href="index.php?page=computer_history&id=<?php echo $computer['id']; ?>" class="btn btn-sm btn-outline-info" title="History">
                     <i class="bi bi-clock-history"></i>
                 </a>
@@ -97,9 +117,10 @@ function renderComputersTableBody($computers, $role, $csrf_token_html)
                     <i class="bi bi-pencil-fill"></i>
                 </a>
                 
+                <!-- This "Delete" form is intercepted by global JS (footer.php) -->
                 <form method="POST" action="index.php?page=computers&action=delete" style="display:inline-block;" class="form-confirm-delete" 
                     data-confirm-message="Are you sure you want to <strong>permanently delete</strong> this computer? All its associated history will be lost. <strong>This action cannot be undone.</strong>">
-                    <?php echo $csrf_token_html; // MODIFIED?>
+                    <?php echo $csrf_token_html; // Inject CSRF token?>
                     <input type="hidden" name="id" value="<?php echo $computer['id']; ?>">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                         <i class="bi bi-trash-fill"></i>
@@ -110,15 +131,16 @@ function renderComputersTableBody($computers, $role, $csrf_token_html)
         </tr>
     <?php
     endforeach;
+    // Get the buffered content and stop buffering
     return ob_get_clean();
 }
 
 /**
- * Renders the HTML for the categories table body.
+ * Renders the HTML for the categories table body (all the <tr>...</tr> rows).
  *
- * @param array $categories
- * @param string $csrf_token_html HTML string from csrf_input()
- * @return string HTML
+ * @param array $categories The array of category data.
+ * @param string $csrf_token_html The HTML string from csrf_input().
+ * @return string The generated HTML for the <tbody>.
  */
 function renderCategoriesTableBody($categories, $csrf_token_html)
 {
@@ -133,6 +155,7 @@ function renderCategoriesTableBody($categories, $csrf_token_html)
             <td><?php echo htmlspecialchars($category['name']); ?></td>
             <td><?php echo htmlspecialchars($category['description'] ?? 'N/A'); ?></td>
             <td>
+                <!-- This "Edit" button triggers the modal JS in categories.php -->
                 <button type="button" class="btn btn-sm btn-outline-primary edit-btn" 
                         data-bs-toggle="modal" data-bs-target="#categoryModal"
                         data-id="<?php echo $category['id']; ?>"
@@ -141,9 +164,10 @@ function renderCategoriesTableBody($categories, $csrf_token_html)
                         title="Edit">
                     <i class="bi bi-pencil-fill"></i>
                 </button>
+                <!-- This "Delete" form is intercepted by global JS (footer.php) -->
                 <form method="POST" action="index.php?page=categories" style="display:inline-block;" class="form-confirm-delete" 
                     data-confirm-message="Are you sure you want to <strong>permanently delete</strong> this category? <p><strong>This action cannot be undone.</strong></p> (Note: The system will prevent deletion if this category is linked to any computers.)">
-                    <?php echo $csrf_token_html; // MODIFIED?>
+                    <?php echo $csrf_token_html; // Inject CSRF token?>
                     <input type="hidden" name="delete_id" value="<?php echo $category['id']; ?>">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                         <i class="bi bi-trash-fill"></i>
@@ -157,11 +181,11 @@ function renderCategoriesTableBody($categories, $csrf_token_html)
 }
 
 /**
- * Renders the HTML for the suppliers table body.
+ * Renders the HTML for the suppliers table body (all the <tr>...</tr> rows).
  *
- * @param array $suppliers
- * @param string $csrf_token_html HTML string from csrf_input()
- * @return string HTML
+ * @param array $suppliers The array of supplier data.
+ * @param string $csrf_token_html The HTML string from csrf_input().
+ * @return string The generated HTML for the <tbody>.
  */
 function renderSuppliersTableBody($suppliers, $csrf_token_html)
 {
@@ -178,6 +202,7 @@ function renderSuppliersTableBody($suppliers, $csrf_token_html)
             <td><?php echo htmlspecialchars($supplier['phone'] ?? 'N/A'); ?></td>
             <td><?php echo htmlspecialchars($supplier['email'] ?? 'N/A'); ?></td>
             <td>
+                <!-- This "Edit" button triggers the modal JS in suppliers.php -->
                 <button type="button" class="btn btn-sm btn-outline-primary edit-btn"
                         data-bs-toggle="modal" data-bs-target="#supplierModal"
                         data-id="<?php echo $supplier['id']; ?>"
@@ -188,9 +213,10 @@ function renderSuppliersTableBody($suppliers, $csrf_token_html)
                         title="Edit">
                     <i class="bi bi-pencil-fill"></i>
                 </button>
+                <!-- This "Delete" form is intercepted by global JS (footer.php) -->
                 <form method="POST" action="index.php?page=suppliers" style="display:inline-block;" class="form-confirm-delete" 
                     data-confirm-message="Are you sure you want to <strong>permanently delete</strong> this supplier? <p><strong>This action cannot be undone.</strong></p> (Note: The system will prevent deletion if this supplier is linked to any computers.)">
-                    <?php echo $csrf_token_html; // MODIFIED?>
+                    <?php echo $csrf_token_html; // Inject CSRF token?>
                     <input type="hidden" name="delete_id" value="<?php echo $supplier['id']; ?>">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                         <i class="bi bi-trash-fill"></i>
@@ -206,13 +232,14 @@ function renderSuppliersTableBody($suppliers, $csrf_token_html)
 /**
  * Renders the HTML for the pagination controls.
  *
- * @param int $current_page
- * @param int $total_pages
- * @param array $query_params
- * @return string HTML
+ * @param int $current_page The active page number.
+ * @param int $total_pages The total number of pages.
+ * @param array $query_params All current filter parameters (from $_GET).
+ * @return string The generated HTML for the <nav> element.
  */
 function renderPagination($current_page, $total_pages, $query_params)
 {
+    // Don't show pagination if there's only one page
     if ($total_pages <= 1) {
         return '';
     }
@@ -223,8 +250,10 @@ function renderPagination($current_page, $total_pages, $query_params)
         <ul class="pagination justify-content-center">
             
             <!-- Previous Button -->
+            <!-- Disable 'Previous' button if on page 1 -->
             <li class="page-item <?php echo ($current_page <= 1) ? 'disabled' : ''; ?>">
                 <?php $query_params['p'] = $current_page - 1; ?>
+                <!-- http_build_query preserves all existing filters (search, status, etc.) -->
                 <a class="page-link" href="?<?php echo http_build_query($query_params); ?>">Previous</a>
             </li>
 
@@ -232,12 +261,14 @@ function renderPagination($current_page, $total_pages, $query_params)
             <?php for ($i = 1; $i <= $total_pages; $i++):
                 $query_params['p'] = $i;
                 ?>
+                <!-- Add 'active' class to the current page number -->
                 <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
                     <a class="page-link" href="?<?php echo http_build_query($query_params); ?>"><?php echo $i; ?></a>
                 </li>
             <?php endfor; ?>
 
             <!-- Next Button -->
+            <!-- Disable 'Next' button if on the last page -->
             <li class="page-item <?php echo ($current_page >= $total_pages) ? 'disabled' : ''; ?>">
                 <?php $query_params['p'] = $current_page + 1; ?>
                 <a class="page-link" href="?<?php echo http_build_query($query_params); ?>">Next</a>

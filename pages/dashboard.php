@@ -1,12 +1,27 @@
 <?php
+/**
+ * Displays the main dashboard.
+ *
+ * This file has two different views based on the user's role:
+ * 1. Admin/Super Admin: Shows system-wide statistics (total assets, users, etc.)
+ * and "notification" panels for items needing attention (e.g., expiring
+ * warranties, stale repairs).
+ * 2. User: Shows a simple list of assets currently assigned to *them*.
+ *
+ * @global PDO $pdo The database connection object.
+ * @global string $role The role of the currently logged-in user.
+ */
+
 // $pdo and $role variables are available from index.php
 
-define('UPLOAD_DIR_DASH', 'uploads/');
+define('UPLOAD_DIR_DASH', 'uploads/'); // Define upload directory for images
 
 // --- Admin & Super Admin Dashboard ---
 if ($role == 'Admin' || $role == 'Super Admin') {
-    // (No changes to any of the Admin dashboard queries or HTML)
+
     try {
+        // --- Statistic Card Queries ---
+        // Simple COUNT(*) queries for the top-level statistic cards.
         $total_computers = $pdo->query('SELECT COUNT(*) FROM computers')->fetchColumn();
         $assigned = $pdo->query("SELECT COUNT(*) FROM computers WHERE status = 'Assigned'")->fetchColumn();
         $in_stock = $pdo->query("SELECT COUNT(*) FROM computers WHERE status = 'In Stock'")->fetchColumn();
@@ -14,6 +29,10 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         $total_users = $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
         $total_suppliers = $pdo->query('SELECT COUNT(*) FROM suppliers')->fetchColumn();
 
+        // --- Notification Panel Queries ---
+
+        // Query 1: Expiring Warranties
+        // Gets assets whose warranty expires between today and 30 days from now.
         $expiring_warranties_stmt = $pdo->prepare("
             SELECT id, asset_tag, model, warranty_expiry 
             FROM computers 
@@ -23,20 +42,29 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         $expiring_warranties_stmt->execute();
         $expiring_warranties = $expiring_warranties_stmt->fetchAll();
 
+        // Query 2: Stale Repairs
+        // Gets assets 'In Repair' for more than 14 days.
         $stale_repairs_stmt = $pdo->prepare("
             SELECT c.id, c.asset_tag, c.model, mrl.timestamp AS last_repair_date
             FROM computers c
             JOIN (
+                -- This subquery finds the *most recent* log entry
+                -- for each computer where the status was set to 'In Repair'.
                 SELECT computer_id, MAX(timestamp) AS timestamp
                 FROM asset_log
                 WHERE details LIKE '%to \'In Repair\'%'
                 GROUP BY computer_id
             ) AS mrl ON c.id = mrl.computer_id
-            WHERE c.status = 'In Repair' AND mrl.timestamp < DATE_SUB(NOW(), INTERVAL 14 DAY)
+            WHERE c.status = 'In Repair' 
+              -- Filter to only those where the last repair log is older than 14 days
+              AND mrl.timestamp < DATE_SUB(NOW(), INTERVAL 14 DAY)
         ");
         $stale_repairs_stmt->execute();
         $stale_repairs = $stale_repairs_stmt->fetchAll();
 
+        // Query 3: Upcoming Maintenance
+        // Gets the next 10 maintenance tasks that are not complete
+        // and are scheduled for any time up to 7 days from now (includes overdue).
         $upcoming_maint_stmt = $pdo->prepare("
             SELECT m.id, m.scheduled_date, c.asset_tag, c.id as computer_id
             FROM maintenance_schedule m
@@ -50,13 +78,18 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         $upcoming_maint = $upcoming_maint_stmt->fetchAll();
 
     } catch (PDOException $e) {
+        // Gracefully handle DB errors
         echo '<div class="alert alert-danger">Could not fetch stats: ' . $e->getMessage() . '</div>';
         $expiring_warranties = [];
         $stale_repairs = [];
         $upcoming_maint = [];
     }
     ?>
+    
+    <!-- Admin View: Page Header -->
     <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <!-- Admin View: Statistic Cards -->
     <div class="row g-4">
         <div class="col-md-6 col-lg-3">
             <div class="card text-white bg-primary shadow-sm h-100 rounded-3">
@@ -138,9 +171,11 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         </div>
     </div>
     
+    <!-- Admin View: Notification Panels -->
     <h2 class="mt-5 mb-3">Notifications</h2>
     <div class="row g-4">
     
+        <!-- Upcoming Maintenance Panel -->
         <div class="col-lg-6">
             <div class="card shadow-sm rounded-3">
                 <div class="card-header bg-info text-dark">
@@ -158,8 +193,10 @@ if ($role == 'Admin' || $role == 'Super Admin') {
                             <?php foreach ($upcoming_maint as $task): ?>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
+                                        <!-- Link to the specific asset's history page -->
                                         <a href="index.php?page=computer_history&id=<?php echo $task['computer_id']; ?>" class="fw-bold"><?php echo htmlspecialchars($task['asset_tag']); ?></a>
                                     </div>
+                                    <!-- Highlight overdue tasks in red -->
                                     <span class="<?php echo (date('Y-m-d') > $task['scheduled_date']) ? 'text-danger' : ''; ?>">
                                         Due: <?php echo htmlspecialchars($task['scheduled_date']); ?>
                                     </span>
@@ -170,6 +207,8 @@ if ($role == 'Admin' || $role == 'Super Admin') {
                 </div>
             </div>
         </div>
+        
+        <!-- Stale Repairs Panel -->
         <div class="col-lg-6">
             <div class="card shadow-sm rounded-3">
                 <div class="card-header bg-danger text-white">
@@ -205,8 +244,11 @@ if ($role == 'Admin' || $role == 'Super Admin') {
 <?php
     // --- User Dashboard ---
 } else {
+    // This 'else' block runs if the user's role is 'User'
     try {
         $user_id = $_SESSION['user_id'];
+
+        // Query: Select all computers assigned to the *currently logged-in user*
         $stmt = $pdo->prepare('
             SELECT c.*, cat.name as category_name
             FROM computers c
@@ -219,9 +261,12 @@ if ($role == 'Admin' || $role == 'Super Admin') {
         echo '<div class="alert alert-danger">Could not fetch assigned computers: ' . $e->getMessage() . '</div>';
     }
     ?>
+    
+    <!-- User View: Page Header -->
     <h1 class="mb-4">My Dashboard</h1>
     <p class="lead">Welcome, <?php echo htmlspecialchars($_SESSION['full_name']); ?>. Here are the assets assigned to you.</p>
 
+    <!-- User View: "My Assigned Computers" Table -->
     <div class="card shadow-sm rounded-3">
         <div class="card-header">
             <h5 class="mb-0">My Assigned Computers & Assets</h5>
@@ -247,10 +292,11 @@ if ($role == 'Admin' || $role == 'Super Admin') {
                                 <tr>
                                     <td>
                                         <?php
+                                            // Thumbnail logic (same as in computer_history.php)
                                             $thumb_path = 'uploads/placeholder.png'; // Default
                                 if (!empty($computer['image_filename'])) {
                                     $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
-                                    $potential_path = UPLOAD_DIR . $thumb_filename;
+                                    $potential_path = UPLOAD_DIR_DASH . $thumb_filename;
                                     if (file_exists($potential_path)) {
                                         $thumb_path = $potential_path;
                                     }
@@ -264,6 +310,7 @@ if ($role == 'Admin' || $role == 'Super Admin') {
                                     <td><?php echo htmlspecialchars($computer['model']); ?></td>
                                     <td><?php echo htmlspecialchars($computer['serial_number'] ?? 'N/A'); ?></td>
                                     <td>
+                                        <!-- Dynamic status badge -->
                                         <span class="badge 
                                             <?php if ($computer['status'] == 'Assigned') {
                                                 echo 'bg-success';

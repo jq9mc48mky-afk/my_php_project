@@ -1,9 +1,23 @@
 <?php
+/**
+ * Displays the detailed history for a single computer asset (Admin-only).
+ *
+ * This file shows two tabs:
+ * 1. Action Log: A history of all actions (Create, Update, Check-in/out) from the 'asset_log' table.
+ * 2. Maintenance: A history of all scheduled maintenance from the 'maintenance_schedule' table.
+ *
+ * @global PDO $pdo The database connection object.
+ * @global string $role The role of the currently logged-in user.
+ */
+
+// Security: Only Admins can access this page
 if ($role == 'User') {
     $_SESSION['error'] = 'Access Denied.';
     header('Location: index.php?page=dashboard');
     exit;
 }
+
+// Security: Validate that an 'id' is present and is numeric
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     $_SESSION['error'] = 'Invalid computer ID.';
     header('Location: index.php?page=computers');
@@ -11,19 +25,23 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $computer_id = (int)$_GET['id'];
-define('UPLOAD_DIR_HISTORY', 'uploads/');
+define('UPLOAD_DIR_HISTORY', 'uploads/'); // Define upload directory for images
 
 try {
+    // Query 1: Get basic info about the computer to display in the header
     $stmt = $pdo->prepare('SELECT asset_tag, model, image_filename FROM computers WHERE id = ?');
     $stmt->execute([$computer_id]);
     $computer = $stmt->fetch();
+
+    // If no computer is found with this ID, redirect
     if (!$computer) {
         $_SESSION['error'] = 'Computer not found.';
         header('Location: index.php?page=computers');
         exit;
     }
 
-    // *** UPDATED: Query 1 (Asset Log) ***
+    // Query 2: Get the Action Log
+    // This joins with 'users' to get the name of the admin who performed the action.
     $log_stmt = $pdo->prepare('
         SELECT l.*, u.username as admin_username, u.full_name as admin_full_name
         FROM asset_log l
@@ -34,7 +52,8 @@ try {
     $log_stmt->execute([$computer_id]);
     $logs = $log_stmt->fetchAll();
 
-    // *** UPDATED: Query 2 (Maintenance Log) ***
+    // Query 3: Get the Maintenance Log
+    // This joins with 'users' to get the name of the admin who created the task.
     $maint_stmt = $pdo->prepare('
         SELECT m.*, u.username as created_by_username, u.full_name as created_by_full_name
         FROM maintenance_schedule m
@@ -46,6 +65,7 @@ try {
     $maintenance_logs = $maint_stmt->fetchAll();
 
 } catch (PDOException $e) {
+    // Handle database errors gracefully
     echo '<div class="alert alert-danger">Error fetching history: ' . $e->getMessage() . '</div>';
     $logs = [];
     $maintenance_logs = [];
@@ -53,11 +73,18 @@ try {
 
 ?>
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center">
         <?php
+        // Thumbnail Logic:
+        // 1. Start with a default placeholder.
+        // 2. If the computer has an image, generate the expected thumbnail filename (e.g., 'image.jpg' -> 'image_thumb.jpg').
+        // 3. Check if that specific thumbnail file *actually exists*.
+        // 4. If it exists, use it. Otherwise, fall back to the placeholder.
         $thumb_path = 'uploads/placeholder.png'; // Default
 if (!empty($computer['image_filename'])) {
+    // Replaces '.jpg' with '_thumb.jpg'
     $thumb_filename = preg_replace('/(\.[^.]+)$/', '_thumb$1', $computer['image_filename']);
     $potential_path = UPLOAD_DIR_HISTORY . $thumb_filename;
     if (file_exists($potential_path)) {
@@ -79,6 +106,8 @@ if (!empty($computer['image_filename'])) {
         <i class="bi bi-arrow-left"></i> Back to Computers List
     </a>
 </div>
+
+<!-- Navigation Tabs -->
 <ul class="nav nav-tabs" id="historyTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="action-log-tab" data-bs-toggle="tab" data-bs-target="#action-log" type="button" role="tab" aria-controls="action-log" aria-selected="true">
@@ -92,8 +121,10 @@ if (!empty($computer['image_filename'])) {
     </li>
 </ul>
 
+<!-- Tab Content -->
 <div class="tab-content" id="historyTabContent">
     
+    <!-- Action Log Tab Pane -->
     <div class="tab-pane fade show active" id="action-log" role="tabpanel" aria-labelledby="action-log-tab">
         <div class="card shadow-sm rounded-bottom rounded-0">
             <div class="card-body">
@@ -125,6 +156,7 @@ if (!empty($computer['image_filename'])) {
                                             <?php endif; ?>
                                         </td>
                                         <td>
+                                            <!-- Dynamic Bootstrap badge based on the action string -->
                                             <span class="badge <?php if ($log['action'] == 'Created') {
                                                 echo 'bg-success';
                                             } elseif ($log['action'] == 'Updated') {
@@ -141,6 +173,7 @@ if (!empty($computer['image_filename'])) {
                                                 <?php echo htmlspecialchars($log['action']); ?>
                                             </span>
                                         </td>
+                                        <!-- 'white-space: pre-wrap;' preserves newlines in the log details -->
                                         <td style="white-space: pre-wrap;"><?php echo htmlspecialchars($log['details']); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -152,6 +185,7 @@ if (!empty($computer['image_filename'])) {
         </div>
     </div>
     
+    <!-- Maintenance Log Tab Pane -->
     <div class="tab-pane fade" id="maintenance" role="tabpanel" aria-labelledby="maintenance-tab">
         <div class="card shadow-sm rounded-bottom rounded-0">
             <div class="card-body">
@@ -175,6 +209,7 @@ if (!empty($computer['image_filename'])) {
                                 <?php foreach ($maintenance_logs as $task): ?>
                                     <tr>
                                         <td>
+                                            <!-- Dynamic badge based on completion date and scheduled date -->
                                             <?php if ($task['completed_date']): ?>
                                                 <span class="badge bg-success">Completed</span>
                                             <?php elseif (date('Y-m-d') > $task['scheduled_date']): ?>
