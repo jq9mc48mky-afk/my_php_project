@@ -28,7 +28,7 @@ function validate_csrf_token() {
         // Token is missing or invalid.
         // Clear token to be safe and die.
         unset($_SESSION['csrf_token']);
-        die('CSRF token validation failed. Please go back and try again.');
+        throw new Exception('Invalid CSRF token.');
     }
 }
 

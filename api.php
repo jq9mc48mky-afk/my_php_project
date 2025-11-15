@@ -1,32 +1,46 @@
 <?php
-// Start session and check authentication
-session_start();
+// Set content type to JSON immediately.
+header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    validate_csrf_token();
-}
+/**
+ * Set a custom error handler.
+ * This will catch all PHP Notices, Warnings, and Errors
+ * and convert them into an Exception we can catch.
+ */
+set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        // This error is not one we're reporting.
+        return;
+    }
+    // Throw an ErrorException that our main try/catch block will find.
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+// Start session and check authentication
+try {
+    session_start();
+    
+    // --- INCLUDE DEPENDENCIES FIRST ---
+    require 'db.php';
+    require 'csrf.php'; // Make sure this is required
+    require 'log_helper.php';
+    require 'ajax_query_helpers.php';
+    require 'ajax_render_helpers.php';
+
+    // --- NOW VALIDATE, INSIDE THE TRY BLOCK ---
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        validate_csrf_token(); // This will now throw an Exception if it fails
+    }
 
 if (!isset($_SESSION['user_id'])) {
     header('HTTP/1.1 401 Unauthorized');
-    echo json_encode(['error' => 'Access Denied. Please log in.']);
-    exit;
+    throw new Exception('Access Denied. Please log in.');
 }
 
 // Set content type to JSON
 header('Content-Type: application/json');
 
-// Include dependencies
-try {
-    require 'db.php';
-    require 'csrf.php';
-    require 'log_helper.php';
-    require 'ajax_query_helpers.php';
-    require 'ajax_render_helpers.php';
-} catch (Exception $e) {
-    header('HTTP/1.1 500 Internal Server Error');
-    echo json_encode(['error' => 'Failed to load dependencies.']);
-    exit;
-}
+
 
 // Get request parameters
 $type = $_GET['type'] ?? '';
@@ -146,10 +160,30 @@ try {
     header('HTTP/1.1 500 Internal Server Error');
     error_log('API PDOException: ' . $e->getMessage());
     echo json_encode(['error' => 'A database error occurred.']);
+
+// --- ADD THIS NEW CATCH BLOCK ---
+    } catch (ErrorException $e) {
+        // This will now catch all those PHP Notices/Warnings!
+        header('HTTP/1.1 500 Internal Server Error');
+        error_log('API ErrorException: ' . $e->getMessage());
+        echo json_encode([
+            'error' => 'An internal server error occurred.', 
+            'details' => $e->getMessage() // This will show you the *real* error
+        ]);
+    // --- END NEW BLOCK ---
+
 } catch (Exception $e) {
-    header('HTTP/1.1 500 Internal Server Error');
+    if (!headers_sent()) {
+        if (http_response_code() == 200) { 
+            header('HTTP/1.1 500 Internal Server Error');
+        }
+    }
+    
     error_log('API Exception: ' . $e->getMessage());
-    echo json_encode(['error' => 'An unexpected error occurred.']);
+    echo json_encode([
+        'error' => 'An error occurred.',
+        'details' => $e->getMessage() // This will now show "Invalid CSRF token."
+    ]);
 }
 
 ?>

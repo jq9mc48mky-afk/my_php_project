@@ -571,7 +571,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 // 4. Call the API
-                const response = await fetch(`api.php?type=generate-reset-token&user_id=${userId}`);
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('csrf_token', csrfToken);
+
+                const response = await fetch(`api.php?type=generate-reset-token`, {
+                    method: 'POST',
+                    body: formData
+                });
+
                 const data = await response.json();
 
                 if (!response.ok) {
