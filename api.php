@@ -61,7 +61,7 @@ $current_page = 1;
 $tableBodyHtml = '';
 $paginationHtml = '';
 
-try {
+
     switch ($type) {
         case 'computers':
             if (!defined('UPLOAD_DIR')) {
