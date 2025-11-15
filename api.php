@@ -1,9 +1,10 @@
 <?php
-// Start session and check authentication
-session_start();
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     validate_csrf_token();
 }
+// Start session and check authentication
+session_start();
+
 if (!isset($_SESSION['user_id'])) {
     header('HTTP/1.1 401 Unauthorized');
     echo json_encode(['error' => 'Access Denied. Please log in.']);
