@@ -1,9 +1,10 @@
 <?php
+// Start session and check authentication
+session_start();
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     validate_csrf_token();
 }
-// Start session and check authentication
-session_start();
 
 if (!isset($_SESSION['user_id'])) {
     header('HTTP/1.1 401 Unauthorized');
@@ -96,7 +97,7 @@ try {
             $user_id = (int)($_POST['user_id'] ?? 0);
             if ($user_id <= 0) {
                 header('HTTP/1.1 400 Bad Request');
-                echo json_encode(['token' => $token]);
+                echo json_encode(['error' => 'Invalid user ID.']);
                 exit;
             }
             

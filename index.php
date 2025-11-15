@@ -90,9 +90,6 @@ try {
 
     ob_start();
 
-    // --- Include the specific page content ---
-    // The page file itself is now responsible for its own logic AND
-    // for including the header and footer.
     $page_file = "pages/{$page}.php";
 
     if (file_exists($page_file)) {
