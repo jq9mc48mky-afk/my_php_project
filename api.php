@@ -177,7 +177,7 @@ try {
 } catch (PDOException $e) {
     // --- Error Handling: Database ---
     header('HTTP/1.1 500 Internal Server Error');
-    error_log('API PDOException: 's . $e->getMessage()); // Log full error
+    error_log('API PDOException: ' . $e->getMessage()); // Log full error
     echo json_encode(['error' => 'A database error occurred.']); // Send generic error
 
 } catch (ErrorException $e) {

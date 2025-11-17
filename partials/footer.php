@@ -149,6 +149,9 @@
      */
     document.addEventListener('DOMContentLoaded', function() {
         
+        // --- Scroll to top on every full page load ---
+        window.scrollTo(0, 0);
+        
         // --- Sidebar Toggle Logic (Desktop) ---
         const sidebarToggle = document.getElementById('sidebarToggle');
         
@@ -306,6 +309,9 @@
                     // Inject the new HTML from the API response
                     if (tableBody) tableBody.innerHTML = data.tableBody;
                     if (pagination) pagination.innerHTML = data.pagination;
+
+                    // --- Scroll to top after AJAX load ---
+                    window.scrollTo(0, 0);
                     
                     // Hide bulk action footer if there are no results
                     const bulkFooter = document.getElementById('bulk-action-footer');

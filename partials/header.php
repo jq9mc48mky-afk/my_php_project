@@ -194,7 +194,7 @@
         .ts-dropdown, .ts-wrapper.single.input-active .ts-dropdown { z-index: 2000 !important; }
     </style>
 </head>
-<body class="<?php echo $_COOKIE['sidebar-minimized'] ?? ''; ?>">
+<body> <!--<body class="<?php //echo $_COOKIE['sidebar-minimized'] ?? ''; ?>"> -->
 
 <!-- Top Navbar (Mobile-only: d-lg-none) -->
 <nav class="navbar navbar-dark bg-dark sticky-top shadow-sm d-lg-none">

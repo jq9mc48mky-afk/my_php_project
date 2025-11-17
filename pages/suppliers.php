@@ -38,6 +38,42 @@ if (isset($_POST['save'])) {
     $email = $_POST['email'] ?: null; // Allow empty
     $admin_user_id = $_SESSION['user_id']; // For logging
 
+    // --- NEW ROBUST PH VALIDATION BLOCK ---
+    if (!empty($phone)) {
+        // 1. Sanitize: Remove all formatting
+        $sanitized_phone = preg_replace('/[\s\-\(\)]+/', '', $phone);
+
+        // 2. Define regex for *sanitized* PH formats
+        $mobile_regex   = '/^((09|08)\d{9})$/'; // 11 digits (e.g., 09171234567)
+        $manila_regex   = '/^(02\d{8})$/';       // 10 digits (e.g., 0281234567)
+        $province_regex = '/^([1-9]\d{8})$/';   // 9 digits (e.g., 321234567)
+
+        // 3. Validate the sanitized data
+        if (preg_match($mobile_regex, $sanitized_phone) || 
+            preg_match($manila_regex, $sanitized_phone) || 
+            preg_match($province_regex, $sanitized_phone)) 
+        {
+            // It's a valid format. Store the clean, sanitized version.
+            $phone = $sanitized_phone;
+        } else {
+            // All formats failed. Reject.
+            $_SESSION['error'] = 'Invalid PH phone number. Please use a valid 11-digit mobile (09..), 10-digit Manila (02..), or 9-digit provincial (32.. / 82..) format.';
+            header('Location: index.php?page=suppliers');
+            exit;
+        }
+    }
+    // --- END NEW VALIDATION BLOCK ---
+
+    // Validate the email ONLY if it is not empty.
+    // FILTER_VALIDATE_EMAIL is the official, safe way to check email formats.
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        // The email is not empty AND it's not a valid format
+        $_SESSION['error'] = 'Invalid email address format.';
+        header('Location: index.php?page=suppliers');
+        exit;
+    }
+    // --- END NEW EMAIL VALIDATION BLOCK ---
+    
     try {
         if ($id) {
             // --- UPDATE (EDIT) LOGIC ---
@@ -254,11 +290,15 @@ $current_page = $data['current_page'];
                         </div>
                         <div class="col-md-6">
                             <label for="supplierPhone" class="form-label">Phone</label>
-                            <input type="tel" class="form-control" id="supplierPhone" name="phone">
+                            <input type="tel" class="form-control" id="supplierPhone" name="phone"
+                                    placeholder="e.g., 0917 123 4567 or (02) 8123-4567"
+                                    pattern="^((09|08)\d{2}\s\d{3}\s\d{4}|\(02\)\s\d{4}-\d{4}|\(\d{2}\)\s\d{3}-\d{4})$"
+                                    title="Use format: 09## ### ####, (02) ####-####, or (##) ###-####">
                         </div>
                         <div class="col-md-6">
                             <label for="supplierEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="supplierEmail" name="email">
+                            <input type="email" class="form-control" id="supplierEmail" name="email" 
+                                    placeholder="e.g., contact@supplier.com">
                         </div>
                     </div>
                 </div>
@@ -272,6 +312,44 @@ $current_page = $data['current_page'];
 </div>
 
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
+/**
+ * NEW: Helper function to format the PH phone number value.
+ * @param {string} value - The raw input value.
+ * @returns {string} The formatted phone number.
+ */
+function formatPhoneNumber(value) {
+    // 1. Get only the digits
+    const digits = value.replace(/[^\d]/g, '');
+
+    // 2. Detect format: Mobile (11 digits)
+    if (digits.startsWith('09') || digits.startsWith('08')) {
+        // Format as 09## ### ####
+        const d = digits.substring(0, 11).match(/^(\d{0,4})(\d{0,3})(\d{0,4})$/);
+        if (!d) return digits; // Fallback
+        return !d[2] ? d[1] : d[1] + ' ' + d[2] + (!d[3] ? '' : ' ' + d[3]);
+    }
+    
+    // 3. Detect format: Landline (Manila - 10 digits)
+    if (digits.startsWith('02')) { 
+        // Format as (02) 8###-####
+        const d = digits.substring(0, 10).match(/^(\d{0,2})(\d{0,4})(\d{0,4})$/);
+        if (!d) return digits;
+        return !d[2] ? d[1] : '(' + d[1] + ') ' + d[2] + (!d[3] ? '' : '-' + d[3]);
+    }
+
+    // 4. Detect format: Landline (Provincial - 9 digits)
+    // Starts with a non-zero digit (e.g., 32..., 82..., 74...)
+    if (digits.length > 0 && !digits.startsWith('0')) {
+        // Format as (32) 123-4567
+        const d = digits.substring(0, 9).match(/^(\d{0,2})(\d{0,3})(\d{0,4})$/);
+        if (!d) return digits;
+        return !d[2] ? d[1] : '(' + d[1] + ') ' + d[2] + (!d[3] ? '' : '-' + d[3]);
+    }
+
+    // 5. Fallback: If it's a partial number, just return digits
+    return digits.substring(0, 11); // Max 11 chars
+}
+
 /**
  * Executes when the DOM is fully loaded.
  * Attaches an event listener to the supplier modal.
@@ -304,6 +382,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const contactInput = supplierModal.querySelector('#supplierContact');
             const phoneInput = supplierModal.querySelector('#supplierPhone');
             const emailInput = supplierModal.querySelector('#supplierEmail');
+
+            // --- Attach the auto-formatting listener ---
+            phoneInput.addEventListener('input', function(e) {
+                // Get current cursor position
+                let cursorPosition = e.target.selectionStart;
+                const originalValue = e.target.value;
+                const formattedValue = formatPhoneNumber(originalValue);
+                
+                e.target.value = formattedValue;
+                
+                // Adjust cursor position
+                if (formattedValue.length > originalValue.length) {
+                    cursorPosition += (formattedValue.length - originalValue.length);
+                } else if (formattedValue.length < originalValue.length) {
+                    // Adjust cursor if backspacing
+                    cursorPosition = Math.max(0, cursorPosition - (originalValue.length - formattedValue.length));
+                }
+                // Handle edge case for cursor jumping on auto-format
+                if(e.target.selectionStart !== cursorPosition) {
+                    e.target.setSelectionRange(cursorPosition, cursorPosition);
+                }
+            });
 
             if (supplierId) {
                 // --- Edit Mode ---

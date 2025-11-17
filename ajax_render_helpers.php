@@ -12,6 +12,36 @@
  */
 
 /**
+ * Formats a sanitized PH phone number for display.
+ *
+ * @param string|null $digits The sanitized phone number from the DB (e.g., "09171234567").
+ * @return string The formatted number (e.g., "0917 123 4567") or "N/A" if empty.
+ */
+function format_ph_phone_for_display($digits) {
+    if (empty($digits)) {
+        return 'N/A';
+    }
+
+    // 1. Mobile (11 digits: 09171234567 -> 0917 123 4567)
+    if (preg_match('/^((09|08)\d{2})(\d{3})(\d{4})$/', $digits, $matches)) {
+        return "{$matches[1]} {$matches[3]} {$matches[4]}";
+    }
+
+    // 2. Manila Landline (10 digits: 0281234567 -> (02) 8123-4567)
+    if (preg_match('/^(02)(\d{4})(\d{4})$/', $digits, $matches)) {
+        return "({$matches[1]}) {$matches[2]}-{$matches[3]}";
+    }
+
+    // 3. Provincial Landline (9 digits: 321234567 -> (32) 123-4567)
+    if (preg_match('/^([1-9]\d{1})(\d{3})(\d{4})$/', $digits, $matches)) {
+        return "({$matches[1]}) {$matches[2]}-{$matches[3]}";
+    }
+
+    // 4. Fallback: Not a recognized PH format, just return the original string
+    return $digits;
+}
+
+/**
  * Renders the HTML for the computers table body (all the <tr>...</tr> rows).
  *
  * @param array $computers The array of computer data from fetchComputersData().
@@ -199,8 +229,16 @@ function renderSuppliersTableBody($suppliers, $csrf_token_html)
         <tr>
             <td><?php echo htmlspecialchars($supplier['name']); ?></td>
             <td><?php echo htmlspecialchars($supplier['contact_person'] ?? 'N/A'); ?></td>
-            <td><?php echo htmlspecialchars($supplier['phone'] ?? 'N/A'); ?></td>
-            <td><?php echo htmlspecialchars($supplier['email'] ?? 'N/A'); ?></td>
+            <td><?php echo htmlspecialchars(format_ph_phone_for_display($supplier['phone'])); ?></td>
+            <td>
+                <?php if (!empty($supplier['email'])): ?>
+                    <a href="mailto:<?php echo htmlspecialchars($supplier['email']); ?>">
+                        <?php echo htmlspecialchars($supplier['email']); ?>
+                    </a>
+                <?php else: ?>
+                    N/A
+                <?php endif; ?>
+            </td>
             <td>
                 <!-- This "Edit" button triggers the modal JS in suppliers.php -->
                 <button type="button" class="btn btn-sm btn-outline-primary edit-btn"
