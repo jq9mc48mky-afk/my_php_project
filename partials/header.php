@@ -21,13 +21,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Computer Inventory System</title>
     
-    <!-- CSS Assets -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link href="assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <link href="assets/css/flatpickr.min.css" rel="stylesheet">
     
-    <!-- Main application styles -->
     <style nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
         /* --- Sidebar Layout Styles --- */
         body {
@@ -45,7 +43,8 @@
             left: 0;
             z-index: 1040; /* Above most content, below modals */
             width: 250px; /* Default Width */
-            background-color: #212529; /* Dark background */
+            /* background-color: #212529; /* Dark background */
+            background: linear-gradient(to bottom, #2a2f34, #1c2023); /* Subtle gradient for depth */
             transition: width 0.3s ease-in-out; 
             display: flex;
             flex-direction: column; /* Allows footer to stick to bottom */
@@ -132,6 +131,15 @@
             transition: all 0.3s ease;
         }
 
+        /* Sidebar Section Headers (e.g., Management, System) */
+        .sidebar-nav .nav-header {
+            font-size: 0.75rem;
+            font-weight: 700; /* fw-bold */
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.65); /* More visible "muted" color */
+            margin: 1rem 0 0.25rem 1rem; /* Replaces mt-3, mb-1, ms-3 */
+        }
+
         /* Sidebar Header (Logo/Title) */
         .sidebar-header {
             padding: 1rem 1.25rem;
@@ -194,17 +202,12 @@
         .ts-dropdown, .ts-wrapper.single.input-active .ts-dropdown { z-index: 2000 !important; }
     </style>
 </head>
-<body> <!--<body class="<?php //echo $_COOKIE['sidebar-minimized'] ?? ''; ?>"> -->
-
-<!-- Top Navbar (Mobile-only: d-lg-none) -->
-<nav class="navbar navbar-dark bg-dark sticky-top shadow-sm d-lg-none">
+<body> <nav class="navbar navbar-dark bg-dark sticky-top shadow-sm d-lg-none">
     <div class="container-fluid">
-        <!-- Mobile menu toggle button -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand" href="#">Inventory System</a>
-        <!-- Mobile profile link -->
         <a href="index.php?page=profile" class="text-white text-decoration-none">
             <i class="bi bi-person-circle fs-4"></i>
         </a>
@@ -212,26 +215,19 @@
 </nav>
 
 <div class="d-flex">
-    <!-- Overlay for mobile menu -->
     <div id="sidebarOverlay"></div>
 
-    <!-- Main Sidebar -->
-    <!-- 'collapse' for mobile, 'd-lg-block' for desktop -->
-    <div class="collapse d-lg-block sidebar bg-dark" id="sidebarMenu">
+    <div class="collapse d-lg-block sidebar" id="sidebarMenu">
         
-        <!-- Sidebar Header (Desktop-only: d-none d-lg-flex) -->
         <div class="sidebar-header d-none d-lg-flex">
             <div>
                 <i class="bi bi-pc-display me-2"></i>
                 <span class="sidebar-header-text">Inventory</span>
             </div>
-            <!-- Desktop sidebar minimize toggle button -->
             <i class="bi bi-list fs-4" id="sidebarToggle" style="cursor: pointer;" title="Toggle Sidebar"></i>
         </div>
         
-        <!-- Navigation Links -->
         <ul class="nav flex-column sidebar-nav flex-grow-1">
-            <!-- Dashboard (All users) -->
             <li class="nav-item">
                 <a class="nav-link <?php echo ($page == 'dashboard') ? 'active' : ''; ?>" 
                    href="index.php?page=dashboard" 
@@ -239,7 +235,6 @@
                     <i class="bi bi-speedometer2"></i> <span class="nav-text">Dashboard</span>
                 </a>
             </li>
-            <!-- Computers (All users) -->
             <li class="nav-item">
                 <a class="nav-link <?php echo ($page == 'computers') ? 'active' : ''; ?>" 
                    href="index.php?page=computers"
@@ -248,9 +243,8 @@
                 </a>
             </li>
             
-            <!-- Admin-Only Links -->
             <?php if ($role == 'Admin' || $role == 'Super Admin'): ?>
-                <li class="nav-header text-uppercase text-muted fs-7 fw-bold mt-3 ms-3 mb-1" style="font-size: 0.75rem;">Management</li>
+                <li class="nav-header">Management</li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($page == 'suppliers') ? 'active' : ''; ?>" 
                        href="index.php?page=suppliers"
@@ -282,9 +276,8 @@
                 </li>
             <?php endif; ?>
             
-            <!-- Super Admin-Only Links -->
             <?php if ($role == 'Super Admin'): ?>
-                <li class="nav-header text-uppercase text-muted fs-7 fw-bold mt-3 ms-3 mb-1" style="font-size: 0.75rem;">System</li>
+                <li class="nav-header">System</li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($page == 'users') ? 'active' : ''; ?>" 
                        href="index.php?page=users"
@@ -301,8 +294,7 @@
                 </li>
             <?php endif; ?>
 
-            <!-- Account Links (All users) -->
-            <li class="nav-header text-uppercase text-muted fs-7 fw-bold mt-3 ms-3 mb-1" style="font-size: 0.75rem;">Account</li>
+            <li class="nav-header">Account</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo ($page == 'profile') ? 'active' : ''; ?>" 
                    href="index.php?page=profile"
@@ -310,7 +302,6 @@
                     <i class="bi bi-person-circle"></i> <span class="nav-text">My Profile</span>
                 </a>
             </li>
-            <!-- Logout Button -->
             <li class="nav-item mt-2 mb-3">
                 <form action="logout.php" method="POST" class="px-3">
                     <?php echo csrf_input(); // CSRF token for logout?>
@@ -321,22 +312,16 @@
             </li>
         </ul>
         
-        <!-- Sidebar Footer (Logged in as...) -->
-        <!-- 'flex-shrink: 0' ensures it doesn't shrink -->
-        <!-- 'mt-auto' pushes it to the bottom of the flex column -->
         <div class="mt-auto p-3 text-white-50 small d-none d-lg-block border-top border-secondary flex-shrink-0">
             <span class="sidebar-footer-text">Logged in as: <br></span>
             <strong class="text-white sidebar-footer-text"><?php echo htmlspecialchars($_SESSION['full_name']); ?></strong>
             
-            <!-- Centered Icon for Minimized State (hidden by default) -->
             <div class="text-center d-none d-minimized-block">
                  <i class="bi bi-person-circle fs-5" title="<?php echo htmlspecialchars($_SESSION['full_name']); ?>"></i>
             </div>
         </div>
     </div>
 
-    <!-- Main Content Wrapper (closed in footer.php) -->
     <div class="main-content">
     
-    <!-- Toast container (for session messages) -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100"></div>

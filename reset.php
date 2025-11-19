@@ -126,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reset Password - Inventory System</title>
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
         .reset-card { max-width: 450px; margin-top: 100px; }
@@ -160,11 +161,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
 
                     <div class="mb-3">
                         <label for="password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="confirm_password" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Set New Password</button>
@@ -175,5 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $user) {
     </div>
 
     <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app.js" defer></script> </body>
 </body>
 </html>

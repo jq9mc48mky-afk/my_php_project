@@ -471,7 +471,12 @@ $roles = ['Super Admin', 'Admin', 'User']; // For modal dropdown
                 <!-- This div is hidden until a link is generated or an error occurs -->
                 <div id="resetLinkResult" style="display: none;">
                     <label for="generatedLink" class="form-label">Send this link to the user (it expires in 30 minutes):</label>
-                    <textarea class="form-control" id="generatedLink" rows="3" readonly></textarea>
+                    <div class="input-group">
+                        <textarea class="form-control" id="generatedLink" rows="3" readonly></textarea>
+                        <button class="btn btn-outline-secondary" type="button" id="copyLinkButton" title="Copy to Clipboard">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Spinner shown during API call -->
@@ -631,6 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const resultDiv = resetModal.querySelector('#resetLinkResult');
         const linkTextarea = resetModal.querySelector('#generatedLink');
         const spinner = resetModal.querySelector('#resetSpinner');
+        const copyBtn = resetModal.querySelector('#copyLinkButton');
 
         /**
          * Listens for 'show.bs.modal' to set the user's name
@@ -651,6 +657,44 @@ document.addEventListener('DOMContentLoaded', function() {
             linkTextarea.value = '';
             generateBtn.style.display = 'block'; // Show generate button
             generateBtn.disabled = false;
+        });
+
+        /**
+         * Handles the 'click' event on the "Copy Link" button
+         * to copy the link to the clipboard and show a toast.
+         */
+        copyBtn.addEventListener('click', function() {
+            const link = linkTextarea.value;
+            if (!link || !navigator.clipboard) return; // Exit if no link or clipboard API
+
+            navigator.clipboard.writeText(link)
+                .then(() => {
+                    // --- SUCCESS ---
+                    // 1. Show global toast (from footer.php)
+                    if (window.showToast) {
+                        window.showToast('Link copied to clipboard!', 'success');
+                    }
+
+                    // 2. Give visual feedback on the button
+                    const icon = copyBtn.querySelector('i');
+                    icon.classList.remove('bi-clipboard');
+                    icon.classList.add('bi-check-lg'); // Show checkmark
+                    copyBtn.disabled = true;
+
+                    // 3. Reset button after 2 seconds
+                    setTimeout(() => {
+                        icon.classList.remove('bi-check-lg');
+                        icon.classList.add('bi-clipboard');
+                        copyBtn.disabled = false;
+                    }, 2000);
+                })
+                .catch(err => {
+                    // --- ERROR ---
+                    console.error('Failed to copy text: ', err);
+                    if (window.showToast) {
+                        window.showToast('Failed to copy link.', 'error');
+                    }
+                });
         });
 
         /**

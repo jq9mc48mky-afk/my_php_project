@@ -13,17 +13,41 @@
  * - Toast notification logic (showing messages from PHP sessions).
  * - Global modal event delegation (for delete/action confirmations).
  * - Global AJAX logic for all filterable tables.
+ * - "Back to Top" button logic.
  *
  * @global string $csp_nonce The Content Security Policy nonce for inline scripts.
  */
 ?>
-</div> <!-- End .main-content (from header.php) -->
-</div> <!-- End .d-flex (from header.php) -->
+</div> </div> <button type="button" class="btn btn-primary btn-sm rounded-circle" id="backToTopButton" title="Go to top">
+    <i class="bi bi-arrow-up fs-5"></i>
+</button>
 
-<!-- === GLOBAL MODALS === -->
+<style nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
+    #backToTopButton {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1030; /* Below sidebar, above content */
+        width: 40px;
+        height: 40px;
+        padding: 5px; /* Adjust as needed */
+        
+        /* Hidden by default */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: opacity 0.2s linear, visibility 0.2s linear, transform 0.2s ease-out;
+    }
+    #backToTopButton.show {
+        opacity: 0.8; /* Slightly transparent on show */
+        visibility: visible;
+        transform: translateY(0);
+    }
+    #backToTopButton:hover {
+        opacity: 1; /* Full opacity on hover */
+    }
+</style>
 
-<!-- Delete Confirmation Modal -->
-<!-- This modal is triggered by any form with class .form-confirm-delete -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -42,8 +66,6 @@
     </div>
 </div>
 
-<!-- Generic Action Confirmation Modal -->
-<!-- This modal is triggered by any form with class .form-confirm-action -->
 <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -62,8 +84,6 @@
     </div>
 </div>
 
-<!-- Validation Error Modal -->
-<!-- This modal is triggered manually by JS (e.g., in computers.php) -->
 <div class="modal fade" id="validationErrorModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -81,12 +101,11 @@
     </div>
 </div>
 
-<!-- === GLOBAL SCRIPTS === -->
 <script src="assets/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/tom-select.complete.min.js"></script>
 <script src="assets/js/flatpickr.min.js"></script>
+<script src="assets/js/app.js" defer></script> </body>
 
-<!-- Main Application JavaScript -->
 <script nonce="<?php echo htmlspecialchars($csp_nonce ?? ''); ?>">
     
     // --- Global Helper Functions ---
@@ -185,28 +204,64 @@
             });
         }
 
+        // --- Back to Top Button Logic ---
+        const backToTopButton = document.getElementById('backToTopButton');
+        if (backToTopButton) {
+            // Show/hide button based on scroll position
+            window.addEventListener('scroll', () => {
+                // Show after scrolling 200px
+                if (window.scrollY > 200) {
+                    backToTopButton.classList.add('show');
+                } else {
+                    backToTopButton.classList.remove('show');
+                }
+            });
+
+            // Scroll to top on click
+            backToTopButton.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+        // --- End Back to Top Button Logic ---
+
+
         // --- Toast Notification Logic ---
         
         /**
          * Globally accessible function to show a toast notification.
          * @param {string} message - The text message to display.
-         * @param {string} type - 'success' or 'error' (controls color/icon).
+         * @param {string} type - 'success', 'error', 'warning', or 'info'.
          */
         window.showToast = (message, type = 'success') => {
             const container = document.querySelector('.toast-container');
             if (!container) return;
-            const id = 'toast-' + Math.random().toString(36).substring(2, 9);
-            const bg = (type === 'success') ? 'bg-success' : 'bg-danger';
-            const icon = (type === 'success') ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
             
+            // --- NEW: Object lookup for toast types ---
+            const toastTypes = {
+                'success': { bg: 'bg-success', icon: 'bi-check-circle-fill', textClass: 'text-white' },
+                'error':   { bg: 'bg-danger',  icon: 'bi-exclamation-triangle-fill', textClass: 'text-white' },
+                'warning': { bg: 'bg-warning', icon: 'bi-exclamation-triangle-fill', textClass: 'text-dark' }, // Use text-dark for yellow bg
+                'info':    { bg: 'bg-info',    icon: 'bi-info-circle-fill', textClass: 'text-white' }
+            };
+
+            // Get the settings for the specified type, or default to 'info'
+            const settings = toastTypes[type] || toastTypes['info'];
+            
+            const id = 'toast-' + Math.random().toString(36).substring(2, 9);
+            const bg = settings.bg;
+            const icon = settings.icon;
+            const textClass = settings.textClass;
+            const btnCloseClass = (textClass === 'text-dark') ? 'btn-close-dark' : 'btn-close-white';
+
             // Create the toast HTML
             const html = `
-                <div class="toast align-items-center text-white ${bg} border-0" role="alert" aria-live="assertive" aria-atomic="true" id="${id}">
+                <div class="toast align-items-center ${textClass} ${bg} border-0" role="alert" aria-live="assertive" aria-atomic="true" id="${id}">
                     <div class="d-flex">
                         <div class="toast-body"><i class="bi ${icon} me-2"></i> ${message}</div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        <button type="button" class="btn-close ${btnCloseClass} me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
                 </div>`;
+            // --- END NEW TOAST LOGIC ---
             
             container.insertAdjacentHTML('beforeend', html);
             const el = document.getElementById(id);
@@ -226,6 +281,14 @@
         <?php if (isset($_SESSION['error'])): ?>
             window.showToast(<?php echo json_encode($_SESSION['error']); ?>, 'error');
             <?php unset($_SESSION['error']); // Clear the message?>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['warning'])): // Example for new warning type ?>
+            window.showToast(<?php echo json_encode($_SESSION['warning']); ?>, 'warning');
+            <?php unset($_SESSION['warning']); ?>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['info'])): // Example for new info type ?>
+            window.showToast(<?php echo json_encode($_SESSION['info']); ?>, 'info');
+            <?php unset($_SESSION['info']); ?>
         <?php endif; ?>
 
         // --- Modal Event Delegation ---

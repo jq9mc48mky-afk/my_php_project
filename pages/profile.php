@@ -73,7 +73,7 @@ if (isset($_POST['change_password'])) {
 
     // Redirect back to dashboard page to show the success/error message
     // Using a redirect clears the POST data and prevents resubmission on refresh.
-    header('Location: index.php?page=dashboard');
+    header('Location: index.php?page=profile');
     exit;
 }
 
@@ -94,16 +94,31 @@ if (isset($_POST['change_password'])) {
 
                     <div class="mb-3">
                         <label for="current_password" class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="new_password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                         <div class="form-text">Must be at least <?php echo MIN_PASSWORD_LENGTH; ?> characters long.</div>
                     </div>
                     <div class="mb-3">
                         <label for="confirm_password" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                     </div>
                     <hr class="my-4">
                     <div class="d-flex justify-content-end">
